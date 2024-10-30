@@ -1,4 +1,4 @@
-package com.bank.yandexlivepictures.ui.theme
+package ru.adonixis.yandexlivepictures.theme
 
 import androidx.compose.ui.graphics.Color
 

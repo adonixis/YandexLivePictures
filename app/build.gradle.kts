@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.bank.yandexlivepictures"
+    namespace = "ru.adonixis.yandexlivepictures"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.bank.yandexlivepictures"
+        applicationId = "ru.adonixis.yandexlivepictures"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

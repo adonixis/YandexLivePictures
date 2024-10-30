@@ -1,4 +1,4 @@
-package com.bank.yandexlivepictures.ui.theme
+package ru.adonixis.yandexlivepictures.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
