@@ -24,5 +24,5 @@ data class MainState(
 )
 
 sealed interface MainAction {
-    object TogglePencilTool : MainAction
+    data object TogglePencilTool : MainAction
 } 
