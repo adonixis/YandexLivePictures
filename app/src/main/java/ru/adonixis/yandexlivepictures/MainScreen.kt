@@ -37,8 +37,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.adonixis.yandexlivepictures.theme.Blue
-import ru.adonixis.yandexlivepictures.theme.Green
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
+import androidx.compose.ui.graphics.StrokeJoin
+
+private fun Path.drawSmoothLine(points: List<Offset>) {
+    if (points.size > 1) {
+        moveTo(points.first().x, points.first().y)
+        for (i in 0 until points.size - 1) {
+            val p0 = if (i > 0) points[i - 1] else points[i]
+            val p1 = points[i]
+            val p2 = points[i + 1]
+            val p3 = if (i < points.size - 2) points[i + 2] else p2
+            
+            val controlPoint1X = p1.x + (p2.x - p0.x) / 6
+            val controlPoint1Y = p1.y + (p2.y - p0.y) / 6
+            val controlPoint2X = p2.x - (p3.x - p1.x) / 6
+            val controlPoint2Y = p2.y - (p3.y - p1.y) / 6
+            
+            cubicTo(
+                controlPoint1X, controlPoint1Y,
+                controlPoint2X, controlPoint2Y,
+                p2.x, p2.y
+            )
+        }
+    }
+}
 
 @Composable
 fun MainScreen(
@@ -210,30 +233,24 @@ fun MainScreen(
                     }
             ) {
                 paths.forEach { path ->
+                    if (path.size > 1) {
+                        drawPath(
+                            path = Path().apply { drawSmoothLine(path) },
+                            color = Color.Black,
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        )
+                    }
+                }
+                
+                if (currentPath.size > 1) {
                     drawPath(
-                        path = Path().apply {
-                            if (path.isNotEmpty()) moveTo(path.first().x, path.first().y)
-                            path.forEach { point ->
-                                lineTo(point.x, point.y)
-                            }
-                        },
+                        path = Path().apply { drawSmoothLine(currentPath) },
                         color = Color.Black,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                     )
                 }
-                drawPath(
-                    path = Path().apply {
-                        if (currentPath.isNotEmpty()) moveTo(currentPath.first().x, currentPath.first().y)
-                        currentPath.forEach { point ->
-                            lineTo(point.x, point.y)
-                        }
-                    },
-                    color = Color.Black,
-                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-                )
             }
         }
-
 
         Row(
             modifier = Modifier
