@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -39,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.adonixis.yandexlivepictures.theme.Blue
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.nativeCanvas
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -196,6 +198,8 @@ fun MainScreen(
         val currentPath = remember {
             mutableStateListOf<Offset>()
         }
+        val eraserPaths = remember { mutableStateListOf<MutableList<Offset>>() }
+        val currentEraserPath = remember { mutableStateListOf<Offset>() }
 
         Box(
             modifier = Modifier
@@ -204,50 +208,99 @@ fun MainScreen(
                 .padding(top = 32.dp, bottom = 22.dp)
                 .clip(shape = RoundedCornerShape(20.dp))
         ) {
+            // Background image
             Image(
+                modifier = Modifier.fillMaxSize(),
                 painter = painterResource(id = R.drawable.bg_paper),
                 contentDescription = "Paper background",
                 contentScale = ContentScale.Crop
             )
 
-            // Canvas for drawing
+            // Drawing Canvas
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(state.isPencilEnabled) {
-                        if (state.isPencilEnabled) {
-                            detectDragGestures(
-                                onDragStart = { offset ->
-                                    currentPath.add(offset)
-                                },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    currentPath.add(change.position)
-                                },
-                                onDragEnd = {
-                                    paths.add(currentPath.toMutableList())
-                                    currentPath.clear()
-                                }
-                            )
+                    .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
+                        when {
+                            state.isPencilEnabled -> {
+                                detectDragGestures(
+                                    onDragStart = { offset ->
+                                        currentPath.add(offset)
+                                    },
+                                    onDrag = { change, _ ->
+                                        change.consume()
+                                        currentPath.add(change.position)
+                                    },
+                                    onDragEnd = {
+                                        paths.add(currentPath.toMutableList())
+                                        currentPath.clear()
+                                    }
+                                )
+                            }
+                            state.isEraserEnabled -> {
+                                detectDragGestures(
+                                    onDragStart = { offset ->
+                                        currentEraserPath.add(offset)
+                                    },
+                                    onDrag = { change, _ ->
+                                        change.consume()
+                                        currentEraserPath.add(change.position)
+                                    },
+                                    onDragEnd = {
+                                        eraserPaths.add(currentEraserPath.toMutableList())
+                                        currentEraserPath.clear()
+                                    }
+                                )
+                            }
                         }
                     }
             ) {
-                paths.forEach { path ->
-                    if (path.size > 1) {
+                with(drawContext.canvas.nativeCanvas) {
+                    val checkPoint = saveLayer(null, null)
+
+                    // Draw all paths
+                    paths.forEach { path ->
+                        if (path.size > 1) {
+                            drawPath(
+                                path = Path().apply { drawSmoothLine(path) },
+                                color = Color.Black,
+                                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                            )
+                        }
+                    }
+                    
+                    // Draw current path
+                    if (currentPath.size > 1) {
                         drawPath(
-                            path = Path().apply { drawSmoothLine(path) },
+                            path = Path().apply { drawSmoothLine(currentPath) },
                             color = Color.Black,
                             style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                         )
                     }
-                }
-                
-                if (currentPath.size > 1) {
-                    drawPath(
-                        path = Path().apply { drawSmoothLine(currentPath) },
-                        color = Color.Black,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                    )
+
+                    // Draw eraser paths
+                    eraserPaths.forEach { path ->
+                        if (path.size > 1) {
+                            drawPath(
+                                path = Path().apply { drawSmoothLine(path) },
+                                color = Color.Transparent,
+                                style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                                blendMode = BlendMode.Clear
+                            )
+                        }
+                    }
+
+                    // Draw current eraser path
+                    if (currentEraserPath.size > 1) {
+                        drawPath(
+                            path = Path().apply { drawSmoothLine(currentEraserPath) },
+                            color = Color.Transparent,
+                            style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                            blendMode = BlendMode.Clear
+                        )
+                    }
+
+                    restoreToCount(checkPoint)
                 }
             }
         }
@@ -293,12 +346,16 @@ fun MainScreen(
                 modifier = Modifier
                     .size(32.dp),
                 onClick = {
-
+                    viewModel.onAction(MainAction.ToggleEraserTool)
                 }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_erase_32),
-                    contentDescription = "Erase icon"
+                    contentDescription = "Erase icon",
+                    tint = if (state.isEraserEnabled)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onBackground
                 )
             }
 
