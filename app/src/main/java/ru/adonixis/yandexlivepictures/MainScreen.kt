@@ -137,12 +137,17 @@ fun MainScreen(
                     modifier = Modifier
                         .size(32.dp),
                     onClick = {
-
-                    }
+                        viewModel.onAction(MainAction.DeleteCurrentFrame)
+                    },
+                    enabled = state.frames.size > 1
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_bin_32),
-                        contentDescription = "Bin icon"
+                        contentDescription = "Delete current frame",
+                        tint = if (state.frames.size > 1)
+                            MaterialTheme.colorScheme.onBackground
+                        else
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
                     )
                 }
 

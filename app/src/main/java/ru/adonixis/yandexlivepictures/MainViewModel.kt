@@ -95,6 +95,19 @@ class MainViewModel : ViewModel() {
                     )
                 }
             }
+            MainAction.DeleteCurrentFrame -> {
+                _state.update { currentState ->
+                    if (currentState.frames.size <= 1) return@update currentState
+                    
+                    val newFrames = currentState.frames.toMutableList()
+                    newFrames.removeAt(currentState.currentFrameIndex)
+                    
+                    currentState.copy(
+                        frames = newFrames,
+                        currentFrameIndex = currentState.currentFrameIndex - 1
+                    )
+                }
+            }
         }
     }
 }
@@ -119,6 +132,7 @@ sealed interface MainAction {
     data object Undo : MainAction
     data object Redo : MainAction
     data object AddNewFrame : MainAction
+    data object DeleteCurrentFrame : MainAction
 }
 
 sealed interface DrawAction {
