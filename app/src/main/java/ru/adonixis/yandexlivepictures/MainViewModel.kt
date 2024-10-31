@@ -2,10 +2,13 @@ package ru.adonixis.yandexlivepictures
 
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class MainViewModel : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -108,6 +111,35 @@ class MainViewModel : ViewModel() {
                     )
                 }
             }
+            MainAction.StartPlayback -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        isPlaybackActive = true,
+                        playbackFrameIndex = 0
+                    )
+                }
+                startPlayback()
+            }
+            MainAction.StopPlayback -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        isPlaybackActive = false,
+                        playbackFrameIndex = currentState.currentFrameIndex
+                    )
+                }
+            }
+        }
+    }
+
+    private fun startPlayback() {
+        viewModelScope.launch {
+            while (state.value.isPlaybackActive) {
+                delay(200) // 5 кадров в секунду
+                _state.update { currentState ->
+                    val nextFrame = (currentState.playbackFrameIndex + 1) % currentState.frames.size
+                    currentState.copy(playbackFrameIndex = nextFrame)
+                }
+            }
         }
     }
 }
@@ -116,7 +148,9 @@ data class MainState(
     val isPencilEnabled: Boolean = false,
     val isEraserEnabled: Boolean = false,
     val frames: List<Frame> = listOf(Frame()),
-    val currentFrameIndex: Int = 0
+    val currentFrameIndex: Int = 0,
+    val isPlaybackActive: Boolean = false,
+    val playbackFrameIndex: Int = 0
 )
 
 data class Frame(
@@ -133,6 +167,8 @@ sealed interface MainAction {
     data object Redo : MainAction
     data object AddNewFrame : MainAction
     data object DeleteCurrentFrame : MainAction
+    data object StartPlayback : MainAction
+    data object StopPlayback : MainAction
 }
 
 sealed interface DrawAction {
