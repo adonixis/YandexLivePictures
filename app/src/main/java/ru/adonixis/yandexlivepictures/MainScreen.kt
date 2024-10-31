@@ -96,12 +96,12 @@ fun MainScreen(
                     onClick = {
                         viewModel.onAction(MainAction.Undo)
                     },
-                    enabled = state.currentHistoryPosition >= 0
+                    enabled = state.frames[state.currentFrameIndex].currentHistoryPosition >= 0
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_left_24),
                         contentDescription = "Undo icon",
-                        tint = if (state.currentHistoryPosition >= 0)
+                        tint = if (state.frames[state.currentFrameIndex].currentHistoryPosition >= 0)
                             MaterialTheme.colorScheme.onBackground
                         else
                             MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
@@ -114,12 +114,14 @@ fun MainScreen(
                     onClick = {
                         viewModel.onAction(MainAction.Redo)
                     },
-                    enabled = state.currentHistoryPosition < state.actionHistory.size - 1
+                    enabled = state.frames[state.currentFrameIndex].currentHistoryPosition < 
+                        state.frames[state.currentFrameIndex].actionHistory.size - 1
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_right_24),
                         contentDescription = "Redo icon",
-                        tint = if (state.currentHistoryPosition < state.actionHistory.size - 1)
+                        tint = if (state.frames[state.currentFrameIndex].currentHistoryPosition < 
+                            state.frames[state.currentFrameIndex].actionHistory.size - 1)
                             MaterialTheme.colorScheme.onBackground
                         else
                             MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
@@ -148,12 +150,12 @@ fun MainScreen(
                     modifier = Modifier
                         .size(32.dp),
                     onClick = {
-
+                        viewModel.onAction(MainAction.AddNewFrame)
                     }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_file_plus_32),
-                        contentDescription = "File plus icon"
+                        contentDescription = "Add new frame"
                     )
                 }
 
@@ -266,10 +268,40 @@ fun MainScreen(
                     }
             ) {
                 with(drawContext.canvas.nativeCanvas) {
-                    val checkPoint = saveLayer(null, null)
+                    // Слой для предыдущего кадра
+                    if (state.currentFrameIndex > 0) {
+                        val previousCheckPoint = saveLayer(null, null)
+                        
+                        val previousFrame = state.frames[state.currentFrameIndex - 1]
+                        previousFrame.actionHistory.take(previousFrame.currentHistoryPosition + 1).forEach { action ->
+                            when (action) {
+                                is DrawAction.DrawPath -> {
+                                    drawPath(
+                                        path = Path().apply { drawSmoothLine(action.path) },
+                                        color = Color.Gray.copy(alpha = 0.3f),
+                                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                    )
+                                }
+                                is DrawAction.ErasePath -> {
+                                    drawPath(
+                                        path = Path().apply { drawSmoothLine(action.path) },
+                                        color = Color.Transparent,
+                                        style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                                        blendMode = BlendMode.Clear
+                                    )
+                                }
+                            }
+                        }
+                        
+                        restoreToCount(previousCheckPoint)
+                    }
 
-                    // Отрисовываем все действия до текущей позиции в истории
-                    state.actionHistory.take(state.currentHistoryPosition + 1).forEach { action ->
+                    // Отдельный слой для текущего кадра
+                    val currentCheckPoint = saveLayer(null, null)
+
+                    // Рисуем текущий кадр
+                    val currentFrame = state.frames[state.currentFrameIndex]
+                    currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).forEach { action ->
                         when (action) {
                             is DrawAction.DrawPath -> {
                                 drawPath(
@@ -289,7 +321,7 @@ fun MainScreen(
                         }
                     }
 
-                    // Отрисовка текущего пути (при рисовании)
+                    // Отрисовка текущих путей
                     if (currentPath.size > 1) {
                         drawPath(
                             path = Path().apply { drawSmoothLine(currentPath) },
@@ -298,7 +330,6 @@ fun MainScreen(
                         )
                     }
 
-                    // Отрисовка текущего пути ластика
                     if (currentEraserPath.size > 1) {
                         drawPath(
                             path = Path().apply { drawSmoothLine(currentEraserPath) },
@@ -308,7 +339,7 @@ fun MainScreen(
                         )
                     }
 
-                    restoreToCount(checkPoint)
+                    restoreToCount(currentCheckPoint)
                 }
             }
         }
