@@ -91,8 +91,11 @@ fun MainScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 IconButton(
-                    modifier = Modifier.size(24.dp),
-                    onClick = { viewModel.onAction(MainAction.Undo) },
+                    modifier = Modifier
+                        .size(24.dp),
+                    onClick = {
+                        viewModel.onAction(MainAction.Undo)
+                    },
                     enabled = state.currentHistoryPosition >= 0
                 ) {
                     Icon(
@@ -106,8 +109,11 @@ fun MainScreen(
                 }
 
                 IconButton(
-                    modifier = Modifier.size(24.dp),
-                    onClick = { viewModel.onAction(MainAction.Redo) },
+                    modifier = Modifier
+                        .size(24.dp),
+                    onClick = {
+                        viewModel.onAction(MainAction.Redo)
+                    },
                     enabled = state.currentHistoryPosition < state.actionHistory.size - 1
                 ) {
                     Icon(
