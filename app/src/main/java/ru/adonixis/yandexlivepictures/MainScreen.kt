@@ -91,28 +91,32 @@ fun MainScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 IconButton(
-                    modifier = Modifier
-                        .size(24.dp),
-                    onClick = {
-
-                    }
+                    modifier = Modifier.size(24.dp),
+                    onClick = { viewModel.onAction(MainAction.Undo) },
+                    enabled = state.currentHistoryPosition >= 0
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_left_24),
-                        contentDescription = "Undo icon"
+                        contentDescription = "Undo icon",
+                        tint = if (state.currentHistoryPosition >= 0)
+                            MaterialTheme.colorScheme.onBackground
+                        else
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
                     )
                 }
 
                 IconButton(
-                    modifier = Modifier
-                        .size(24.dp),
-                    onClick = {
-
-                    }
+                    modifier = Modifier.size(24.dp),
+                    onClick = { viewModel.onAction(MainAction.Redo) },
+                    enabled = state.currentHistoryPosition < state.actionHistory.size - 1
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_right_24),
-                        contentDescription = "Redo icon"
+                        contentDescription = "Redo icon",
+                        tint = if (state.currentHistoryPosition < state.actionHistory.size - 1)
+                            MaterialTheme.colorScheme.onBackground
+                        else
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
                     )
                 }
             }
@@ -232,7 +236,7 @@ fun MainScreen(
                                         currentPath.add(change.position)
                                     },
                                     onDragEnd = {
-                                        paths.add(currentPath.toMutableList())
+                                        viewModel.onAction(MainAction.AddDrawingPath(currentPath.toList()))
                                         currentPath.clear()
                                     }
                                 )
@@ -247,7 +251,7 @@ fun MainScreen(
                                         currentEraserPath.add(change.position)
                                     },
                                     onDragEnd = {
-                                        eraserPaths.add(currentEraserPath.toMutableList())
+                                        viewModel.onAction(MainAction.AddEraserPath(currentEraserPath.toList()))
                                         currentEraserPath.clear()
                                     }
                                 )
@@ -258,18 +262,28 @@ fun MainScreen(
                 with(drawContext.canvas.nativeCanvas) {
                     val checkPoint = saveLayer(null, null)
 
-                    // Draw all paths
-                    paths.forEach { path ->
-                        if (path.size > 1) {
-                            drawPath(
-                                path = Path().apply { drawSmoothLine(path) },
-                                color = Color.Black,
-                                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                            )
+                    // Отрисовываем все действия до текущей позиции в истории
+                    state.actionHistory.take(state.currentHistoryPosition + 1).forEach { action ->
+                        when (action) {
+                            is DrawAction.DrawPath -> {
+                                drawPath(
+                                    path = Path().apply { drawSmoothLine(action.path) },
+                                    color = Color.Black,
+                                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                )
+                            }
+                            is DrawAction.ErasePath -> {
+                                drawPath(
+                                    path = Path().apply { drawSmoothLine(action.path) },
+                                    color = Color.Transparent,
+                                    style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                                    blendMode = BlendMode.Clear
+                                )
+                            }
                         }
                     }
-                    
-                    // Draw current path
+
+                    // Отрисовка текущего пути (при рисовании)
                     if (currentPath.size > 1) {
                         drawPath(
                             path = Path().apply { drawSmoothLine(currentPath) },
@@ -278,19 +292,7 @@ fun MainScreen(
                         )
                     }
 
-                    // Draw eraser paths
-                    eraserPaths.forEach { path ->
-                        if (path.size > 1) {
-                            drawPath(
-                                path = Path().apply { drawSmoothLine(path) },
-                                color = Color.Transparent,
-                                style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-                                blendMode = BlendMode.Clear
-                            )
-                        }
-                    }
-
-                    // Draw current eraser path
+                    // Отрисовка текущего пути ластика
                     if (currentEraserPath.size > 1) {
                         drawPath(
                             path = Path().apply { drawSmoothLine(currentEraserPath) },
