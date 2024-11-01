@@ -717,7 +717,18 @@ fun MainScreen(
                         Box(
                             modifier = Modifier
                                 .size(28.dp)
-                                .background(color = White, shape = CircleShape),
+                                .background(color = White, shape = CircleShape)
+                                .then(
+                                    if (state.selectedColor == White.toArgb()) {
+                                        Modifier.border(
+                                            width = 1.5.dp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = CircleShape
+                                        )
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
                         )
                     }
 
@@ -731,7 +742,18 @@ fun MainScreen(
                         Box(
                             modifier = Modifier
                                 .size(28.dp)
-                                .background(color = Red, shape = CircleShape),
+                                .background(color = Red, shape = CircleShape)
+                                .then(
+                                    if (state.selectedColor == Red.toArgb()) {
+                                        Modifier.border(
+                                            width = 1.5.dp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = CircleShape
+                                        )
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
                         )
                     }
 
@@ -745,7 +767,18 @@ fun MainScreen(
                         Box(
                             modifier = Modifier
                                 .size(28.dp)
-                                .background(color = Black, shape = CircleShape),
+                                .background(color = Black, shape = CircleShape)
+                                .then(
+                                    if (state.selectedColor == Black.toArgb()) {
+                                        Modifier.border(
+                                            width = 1.5.dp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = CircleShape
+                                        )
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
                         )
                     }
 
@@ -759,7 +792,18 @@ fun MainScreen(
                         Box(
                             modifier = Modifier
                                 .size(28.dp)
-                                .background(color = Blue, shape = CircleShape),
+                                .background(color = Blue, shape = CircleShape)
+                                .then(
+                                    if (state.selectedColor == Blue.toArgb()) {
+                                        Modifier.border(
+                                            width = 1.5.dp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            shape = CircleShape
+                                        )
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
                         )
                     }
                 }
@@ -840,10 +884,16 @@ fun MainScreen(
                     modifier = Modifier
                         .size(28.dp)
                         .background(color = Color(state.selectedColor), shape = CircleShape)
-                        .border(
-                            width = if (state.isColorsVisible) 1.5.dp else 0.dp,
-                            color = if (state.isColorsVisible) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            shape = CircleShape
+                        .then(
+                            if (state.isColorsVisible) {
+                                Modifier.border(
+                                    width = 1.5.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = CircleShape
+                                )
+                            } else {
+                                Modifier
+                            }
                         ),
                 )
             }
