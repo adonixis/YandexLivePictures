@@ -105,9 +105,9 @@ fun MainScreen(
                         painter = painterResource(id = R.drawable.ic_arrow_left_24),
                         contentDescription = "Undo icon",
                         tint = if (state.frames[state.currentFrameIndex].currentHistoryPosition >= 0)
-                            MaterialTheme.colorScheme.onBackground
+                            MaterialTheme.colorScheme.onSurface
                         else
-                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -123,9 +123,9 @@ fun MainScreen(
                         contentDescription = "Redo icon",
                         tint = if (state.frames[state.currentFrameIndex].currentHistoryPosition < 
                             state.frames[state.currentFrameIndex].actionHistory.size - 1)
-                            MaterialTheme.colorScheme.onBackground
+                            MaterialTheme.colorScheme.onSurface
                         else
-                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -145,9 +145,9 @@ fun MainScreen(
                         painter = painterResource(id = R.drawable.ic_bin_32),
                         contentDescription = "Delete current frame",
                         tint = if (state.frames.size > 1)
-                            MaterialTheme.colorScheme.onBackground
+                            MaterialTheme.colorScheme.onSurface
                         else
-                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -188,9 +188,9 @@ fun MainScreen(
                         painter = painterResource(id = R.drawable.ic_stop_32),
                         contentDescription = "Stop playback",
                         tint = if (state.isPlaybackActive)
-                            MaterialTheme.colorScheme.onBackground
+                            MaterialTheme.colorScheme.onSurface
                         else
-                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -203,9 +203,9 @@ fun MainScreen(
                         painter = painterResource(id = R.drawable.ic_play_32),
                         contentDescription = "Start playback",
                         tint = if (!state.isPlaybackActive && state.frames.size > 1)
-                            MaterialTheme.colorScheme.onBackground
+                            MaterialTheme.colorScheme.onSurface
                         else
-                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f)
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -391,7 +391,7 @@ fun MainScreen(
                     tint = if (state.isPencilEnabled)
                         MaterialTheme.colorScheme.primary
                     else
-                        MaterialTheme.colorScheme.onBackground
+                        MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -417,7 +417,7 @@ fun MainScreen(
                     tint = if (state.isEraserEnabled)
                         MaterialTheme.colorScheme.primary
                     else
-                        MaterialTheme.colorScheme.onBackground
+                        MaterialTheme.colorScheme.onSurface
                 )
             }
 
