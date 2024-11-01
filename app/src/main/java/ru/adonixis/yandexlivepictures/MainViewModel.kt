@@ -137,6 +137,23 @@ class MainViewModel : ViewModel() {
                     )
                 }
             }
+            is MainAction.AddShape -> {
+                _state.update { currentState ->
+                    val currentFrame = currentState.frames[currentState.currentFrameIndex]
+                    val newHistory = currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).toMutableList()
+                    newHistory.add(DrawAction.DrawShape(action.shape, action.center, action.size))
+                    
+                    val updatedFrame = currentFrame.copy(
+                        actionHistory = newHistory,
+                        currentHistoryPosition = newHistory.size - 1
+                    )
+                    
+                    val newFrames = currentState.frames.toMutableList()
+                    newFrames[currentState.currentFrameIndex] = updatedFrame
+                    
+                    currentState.copy(frames = newFrames)
+                }
+            }
         }
     }
 
@@ -180,9 +197,18 @@ sealed interface MainAction {
     data object StartPlayback : MainAction
     data object StopPlayback : MainAction
     data object ToggleShapesPanel : MainAction
+    data class AddShape(val shape: Shape, val center: Offset, val size: Float) : MainAction
 }
 
 sealed interface DrawAction {
     data class DrawPath(val path: List<Offset>) : DrawAction
     data class ErasePath(val path: List<Offset>) : DrawAction
-} 
+    data class DrawShape(val shape: Shape, val center: Offset, val size: Float) : DrawAction
+}
+
+sealed interface Shape {
+    data object Square : Shape
+    data object Circle : Shape
+    data object Triangle : Shape
+    data object Arrow : Shape
+}

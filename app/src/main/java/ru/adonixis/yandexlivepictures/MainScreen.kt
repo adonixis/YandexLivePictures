@@ -50,8 +50,14 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.toSize
+import kotlin.math.min
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -76,6 +82,61 @@ private fun Path.drawSmoothLine(points: List<Offset>) {
     }
 }
 
+// Добавим функции для рисования фигур
+private fun DrawScope.drawSquare(center: Offset, size: Float, alpha: Float = 1f) {
+    val path = Path().apply {
+        moveTo(center.x - size/2, center.y - size/2)
+        lineTo(center.x + size/2, center.y - size/2)
+        lineTo(center.x + size/2, center.y + size/2)
+        lineTo(center.x - size/2, center.y + size/2)
+        close()
+    }
+    drawPath(
+        path = path,
+        color = Color.Black.copy(alpha = alpha),
+        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+    )
+}
+
+private fun DrawScope.drawCircle(center: Offset, size: Float, alpha: Float = 1f) {
+    drawCircle(
+        color = Color.Black.copy(alpha = alpha),
+        radius = size/2,
+        center = center,
+        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+    )
+}
+
+private fun DrawScope.drawTriangle(center: Offset, size: Float, alpha: Float = 1f) {
+    val path = Path().apply {
+        moveTo(center.x, center.y - size/2)
+        lineTo(center.x + size/2, center.y + size/2)
+        lineTo(center.x - size/2, center.y + size/2)
+        close()
+    }
+    drawPath(
+        path = path,
+        color = Color.Black.copy(alpha = alpha),
+        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+    )
+}
+
+private fun DrawScope.drawArrow(center: Offset, size: Float, alpha: Float = 1f) {
+    val path = Path().apply {
+        moveTo(center.x, center.y - size/2)
+        lineTo(center.x - size/3, center.y - size/6)
+        moveTo(center.x, center.y - size/2)
+        lineTo(center.x + size/3, center.y - size/6)
+        moveTo(center.x, center.y - size/2)
+        lineTo(center.x, center.y + size/2)
+    }
+    drawPath(
+        path = path,
+        color = Color.Black.copy(alpha = alpha),
+        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+    )
+}
+
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
@@ -84,6 +145,7 @@ fun MainScreen(
     val state = viewModel.state.collectAsState().value
     val currentPath = remember { mutableStateListOf<Offset>() }
     val currentEraserPath = remember { mutableStateListOf<Offset>() }
+    var canvasSize by remember { mutableStateOf(Size.Zero) }
 
     Column(
         modifier = modifier
@@ -244,6 +306,9 @@ fun MainScreen(
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
+                        .onSizeChanged { 
+                            canvasSize = it.toSize()
+                        }
                         .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
                             if (!state.isPlaybackActive) {
                                 when {
@@ -333,52 +398,6 @@ fun MainScreen(
                                 }
                             }
                         }
-                        .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
-                            // Существующий код для detectDragGestures остается без изменений
-                            if (!state.isPlaybackActive) {
-                                when {
-                                    state.isPencilEnabled -> {
-                                        detectDragGestures(
-                                            onDragStart = { offset ->
-                                                currentPath.add(offset)
-                                            },
-                                            onDrag = { change, _ ->
-                                                change.consume()
-                                                currentPath.add(change.position)
-                                            },
-                                            onDragEnd = {
-                                                viewModel.onAction(
-                                                    MainAction.AddDrawingPath(
-                                                        currentPath.toList()
-                                                    )
-                                                )
-                                                currentPath.clear()
-                                            }
-                                        )
-                                    }
-
-                                    state.isEraserEnabled -> {
-                                        detectDragGestures(
-                                            onDragStart = { offset ->
-                                                currentEraserPath.add(offset)
-                                            },
-                                            onDrag = { change, _ ->
-                                                change.consume()
-                                                currentEraserPath.add(change.position)
-                                            },
-                                            onDragEnd = {
-                                                viewModel.onAction(
-                                                    MainAction.AddEraserPath(
-                                                        currentEraserPath.toList()
-                                                    )
-                                                )
-                                                currentEraserPath.clear()
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
                 ) {
                     with(drawContext.canvas.nativeCanvas) {
                         val checkPoint = saveLayer(null, null)
@@ -412,6 +431,14 @@ fun MainScreen(
                                                 ),
                                                 blendMode = BlendMode.Clear
                                             )
+                                        }
+                                        is DrawAction.DrawShape -> {
+                                            when (action.shape) {
+                                                Shape.Square -> drawSquare(action.center, action.size, alpha = 1f)
+                                                Shape.Circle -> drawCircle(action.center, action.size, alpha = 1f)
+                                                Shape.Triangle -> drawTriangle(action.center, action.size, alpha = 1f)
+                                                Shape.Arrow -> drawArrow(action.center, action.size, alpha = 1f)
+                                            }
                                         }
                                     }
                                 }
@@ -447,6 +474,14 @@ fun MainScreen(
                                                     ),
                                                     blendMode = BlendMode.Clear
                                                 )
+                                            }
+                                            is DrawAction.DrawShape -> {
+                                                when (action.shape) {
+                                                    Shape.Square -> drawSquare(action.center, action.size, alpha = 0.3f)
+                                                    Shape.Circle -> drawCircle(action.center, action.size, alpha = 0.3f)
+                                                    Shape.Triangle -> drawTriangle(action.center, action.size, alpha = 0.3f)
+                                                    Shape.Arrow -> drawArrow(action.center, action.size, alpha = 0.3f)
+                                                }
                                             }
                                         }
                                     }
@@ -485,6 +520,14 @@ fun MainScreen(
                                                 ),
                                                 blendMode = BlendMode.Clear
                                             )
+                                        }
+                                        is DrawAction.DrawShape -> {
+                                            when (action.shape) {
+                                                Shape.Square -> drawSquare(action.center, action.size, alpha = 1f)
+                                                Shape.Circle -> drawCircle(action.center, action.size, alpha = 1f)
+                                                Shape.Triangle -> drawTriangle(action.center, action.size, alpha = 1f)
+                                                Shape.Arrow -> drawArrow(action.center, action.size, alpha = 1f)
+                                            }
                                         }
                                     }
                                 }
@@ -551,9 +594,16 @@ fun MainScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        modifier = Modifier
-                            .size(32.dp),
-                        onClick = {}
+                        modifier = Modifier.size(32.dp),
+                        onClick = {
+                            viewModel.onAction(
+                                MainAction.AddShape(
+                                    shape = Shape.Square,
+                                    center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                    size = min(canvasSize.width, canvasSize.height) * 0.8f
+                                )
+                            )
+                        }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_square_24),
@@ -562,9 +612,16 @@ fun MainScreen(
                     }
 
                     IconButton(
-                        modifier = Modifier
-                            .size(32.dp),
-                        onClick = {}
+                        modifier = Modifier.size(32.dp),
+                        onClick = {
+                            viewModel.onAction(
+                                MainAction.AddShape(
+                                    shape = Shape.Circle,
+                                    center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                    size = min(canvasSize.width, canvasSize.height) * 0.8f
+                                )
+                            )
+                        }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_circle_24),
@@ -573,9 +630,16 @@ fun MainScreen(
                     }
 
                     IconButton(
-                        modifier = Modifier
-                            .size(32.dp),
-                        onClick = {}
+                        modifier = Modifier.size(32.dp),
+                        onClick = {
+                            viewModel.onAction(
+                                MainAction.AddShape(
+                                    shape = Shape.Triangle,
+                                    center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                    size = min(canvasSize.width, canvasSize.height) * 0.8f
+                                )
+                            )
+                        }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_triangle_24),
@@ -584,9 +648,16 @@ fun MainScreen(
                     }
 
                     IconButton(
-                        modifier = Modifier
-                            .size(32.dp),
-                        onClick = {}
+                        modifier = Modifier.size(32.dp),
+                        onClick = {
+                            viewModel.onAction(
+                                MainAction.AddShape(
+                                    shape = Shape.Arrow,
+                                    center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                    size = min(canvasSize.width, canvasSize.height) * 0.8f
+                                )
+                            )
+                        }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_up_24),
