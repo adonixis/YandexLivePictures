@@ -278,14 +278,14 @@ fun MainScreen(
                                     drawPath(
                                         path = Path().apply { drawSmoothLine(action.path) },
                                         color = Color.Black,
-                                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                                     )
                                 }
                                 is DrawAction.ErasePath -> {
                                     drawPath(
                                         path = Path().apply { drawSmoothLine(action.path) },
                                         color = Color.Transparent,
-                                        style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                                        style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
                                         blendMode = BlendMode.Clear
                                     )
                                 }
@@ -303,14 +303,14 @@ fun MainScreen(
                                         drawPath(
                                             path = Path().apply { drawSmoothLine(action.path) },
                                             color = Color.Gray.copy(alpha = 0.3f),
-                                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                                         )
                                     }
                                     is DrawAction.ErasePath -> {
                                         drawPath(
                                             path = Path().apply { drawSmoothLine(action.path) },
                                             color = Color.Transparent,
-                                            style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                                            style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
                                             blendMode = BlendMode.Clear
                                         )
                                     }
@@ -331,14 +331,14 @@ fun MainScreen(
                                     drawPath(
                                         path = Path().apply { drawSmoothLine(action.path) },
                                         color = Color.Black,
-                                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                                     )
                                 }
                                 is DrawAction.ErasePath -> {
                                     drawPath(
                                         path = Path().apply { drawSmoothLine(action.path) },
                                         color = Color.Transparent,
-                                        style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                                        style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
                                         blendMode = BlendMode.Clear
                                     )
                                 }
@@ -350,7 +350,7 @@ fun MainScreen(
                             drawPath(
                                 path = Path().apply { drawSmoothLine(currentPath) },
                                 color = Color.Black,
-                                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
                             )
                         }
 
@@ -358,7 +358,7 @@ fun MainScreen(
                             drawPath(
                                 path = Path().apply { drawSmoothLine(currentEraserPath) },
                                 color = Color.Transparent,
-                                style = Stroke(width = 20.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+                                style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
                                 blendMode = BlendMode.Clear
                             )
                         }
