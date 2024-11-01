@@ -42,6 +42,7 @@ import ru.adonixis.yandexlivepictures.theme.Blue
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.PointerEventType
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -230,6 +231,75 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
+                        if (!state.isPlaybackActive) {
+                            when {
+                                state.isPencilEnabled -> {
+                                    awaitPointerEventScope {
+                                        var path = mutableListOf<Offset>()
+                                        while (true) {
+                                            val event = awaitPointerEvent()
+                                            when (event.type) {
+                                                PointerEventType.Press -> {
+                                                    val position = event.changes.first().position
+                                                    path = mutableListOf(position)
+                                                    currentPath.clear()
+                                                    currentPath.addAll(path)
+                                                }
+                                                PointerEventType.Move -> {
+                                                    val position = event.changes.first().position
+                                                    path.add(position)
+                                                    currentPath.clear()
+                                                    currentPath.addAll(path)
+                                                }
+                                                PointerEventType.Release -> {
+                                                    if (path.size == 1) {
+                                                        path.add(path.first())
+                                                    }
+                                                    viewModel.onAction(MainAction.AddDrawingPath(path))
+                                                    path = mutableListOf()
+                                                    currentPath.clear()
+                                                }
+                                                else -> { /* ignore */ }
+                                            }
+                                        }
+                                    }
+                                }
+                                state.isEraserEnabled -> {
+                                    awaitPointerEventScope {
+                                        var path = mutableListOf<Offset>()
+                                        while (true) {
+                                            val event = awaitPointerEvent()
+                                            when (event.type) {
+                                                PointerEventType.Press -> {
+                                                    val position = event.changes.first().position
+                                                    path = mutableListOf(position)
+                                                    currentEraserPath.clear()
+                                                    currentEraserPath.addAll(path)
+                                                }
+                                                PointerEventType.Move -> {
+                                                    val position = event.changes.first().position
+                                                    path.add(position)
+                                                    currentEraserPath.clear()
+                                                    currentEraserPath.addAll(path)
+                                                }
+                                                PointerEventType.Release -> {
+                                                    if (path.size == 1) {
+                                                        path.add(path.first())
+                                                    }
+                                                    viewModel.onAction(MainAction.AddEraserPath(path))
+                                                    path = mutableListOf()
+                                                    currentEraserPath.clear()
+                                                }
+                                                else -> { /* ignore */ }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
+                        // Существующий код для detectDragGestures остается без изменений
                         if (!state.isPlaybackActive) {
                             when {
                                 state.isPencilEnabled -> {
