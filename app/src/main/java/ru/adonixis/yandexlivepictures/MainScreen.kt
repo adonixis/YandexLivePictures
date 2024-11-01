@@ -677,7 +677,7 @@ fun MainScreen(
             ) {
                 // Расширенная панель с цветами
                 AnimatedVisibility(
-                    visible = state.isColorsVisible,
+                    visible = state.isExtendedColorsVisible,
                     enter = fadeIn(
                         animationSpec = tween(durationMillis = 200)
                     ),
@@ -855,11 +855,15 @@ fun MainScreen(
                     ) {
                         IconButton(
                             modifier = Modifier.size(32.dp),
-                            onClick = { viewModel.onAction(MainAction.ToggleColorsPanel) }
+                            onClick = { viewModel.onAction(MainAction.ToggleExtendedColorsPanel) }
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_color_palette_32),
-                                contentDescription = "Color palette icon"
+                                contentDescription = "Color palette icon",
+                                tint = if (state.isExtendedColorsVisible)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface
                             )
                         }
 

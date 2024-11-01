@@ -45,9 +45,16 @@ class MainViewModel : ViewModel() {
             MainAction.ToggleColorsPanel -> {
                 _state.update { it.copy(
                     isColorsVisible = !it.isColorsVisible,
+                    isExtendedColorsVisible = false,
                     isPencilEnabled = false,
                     isEraserEnabled = false,
                     isShapesVisible = false
+                ) }
+            }
+            MainAction.ToggleExtendedColorsPanel -> {
+                _state.update { it.copy(
+                    isExtendedColorsVisible = !it.isExtendedColorsVisible,
+                    isColorsVisible = true
                 ) }
             }
             is MainAction.AddDrawingPath -> {
@@ -191,6 +198,7 @@ data class MainState(
     val isEraserEnabled: Boolean = false,
     val isShapesVisible: Boolean = false,
     val isColorsVisible: Boolean = false,
+    val isExtendedColorsVisible: Boolean = false,
     val frames: List<Frame> = listOf(Frame()),
     val currentFrameIndex: Int = 0,
     val isPlaybackActive: Boolean = false,
@@ -208,6 +216,7 @@ sealed interface MainAction {
     data object ToggleEraserTool : MainAction
     data object ToggleShapesPanel : MainAction
     data object ToggleColorsPanel : MainAction
+    data object ToggleExtendedColorsPanel : MainAction
     data class AddDrawingPath(val path: List<Offset>) : MainAction
     data class AddEraserPath(val path: List<Offset>) : MainAction
     data class AddShape(val shape: Shape, val center: Offset, val size: Float) : MainAction
