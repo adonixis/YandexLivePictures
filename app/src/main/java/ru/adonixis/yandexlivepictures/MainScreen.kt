@@ -61,6 +61,7 @@ import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.Red
 import ru.adonixis.yandexlivepictures.theme.White
 import kotlin.math.min
+import androidx.compose.ui.graphics.toArgb
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -413,7 +414,7 @@ fun MainScreen(
                                         is DrawAction.DrawPath -> {
                                             drawPath(
                                                 path = Path().apply { drawSmoothLine(action.path) },
-                                                color = Color.Black,
+                                                color = Color(action.color),
                                                 style = Stroke(
                                                     width = 2.dp.toPx(),
                                                     cap = StrokeCap.Round,
@@ -456,7 +457,7 @@ fun MainScreen(
                                             is DrawAction.DrawPath -> {
                                                 drawPath(
                                                     path = Path().apply { drawSmoothLine(action.path) },
-                                                    color = Color.Gray.copy(alpha = 0.3f),
+                                                    color = Color(action.color).copy(alpha = 0.3f),
                                                     style = Stroke(
                                                         width = 2.dp.toPx(),
                                                         cap = StrokeCap.Round,
@@ -502,7 +503,7 @@ fun MainScreen(
                                         is DrawAction.DrawPath -> {
                                             drawPath(
                                                 path = Path().apply { drawSmoothLine(action.path) },
-                                                color = Color.Black,
+                                                color = Color(action.color),
                                                 style = Stroke(
                                                     width = 2.dp.toPx(),
                                                     cap = StrokeCap.Round,
@@ -538,7 +539,7 @@ fun MainScreen(
                             if (currentPath.size > 1) {
                                 drawPath(
                                     path = Path().apply { drawSmoothLine(currentPath) },
-                                    color = Color.Black,
+                                    color = Color(state.selectedColor),
                                     style = Stroke(
                                         width = 2.dp.toPx(),
                                         cap = StrokeCap.Round,
@@ -698,7 +699,7 @@ fun MainScreen(
                 ) {
                     IconButton(
                         modifier = Modifier.size(32.dp),
-                        onClick = {}
+                        onClick = { viewModel.onAction(MainAction.ToggleColorsPanel) }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_color_palette_32),
@@ -708,7 +709,10 @@ fun MainScreen(
 
                     IconButton(
                         modifier = Modifier.size(32.dp),
-                        onClick = {}
+                        onClick = { 
+                            viewModel.onAction(MainAction.SelectColor(White.toArgb()))
+                            viewModel.onAction(MainAction.ToggleColorsPanel) 
+                        }
                     ) {
                         Box(
                             modifier = Modifier
@@ -719,7 +723,10 @@ fun MainScreen(
 
                     IconButton(
                         modifier = Modifier.size(32.dp),
-                        onClick = {}
+                        onClick = { 
+                            viewModel.onAction(MainAction.SelectColor(Red.toArgb()))
+                            viewModel.onAction(MainAction.ToggleColorsPanel) 
+                        }
                     ) {
                         Box(
                             modifier = Modifier
@@ -730,7 +737,10 @@ fun MainScreen(
 
                     IconButton(
                         modifier = Modifier.size(32.dp),
-                        onClick = {}
+                        onClick = { 
+                            viewModel.onAction(MainAction.SelectColor(Black.toArgb()))
+                            viewModel.onAction(MainAction.ToggleColorsPanel) 
+                        }
                     ) {
                         Box(
                             modifier = Modifier
@@ -741,7 +751,10 @@ fun MainScreen(
 
                     IconButton(
                         modifier = Modifier.size(32.dp),
-                        onClick = {}
+                        onClick = { 
+                            viewModel.onAction(MainAction.SelectColor(Blue.toArgb()))
+                            viewModel.onAction(MainAction.ToggleColorsPanel) 
+                        }
                     ) {
                         Box(
                             modifier = Modifier
@@ -826,10 +839,10 @@ fun MainScreen(
                 Box(
                     modifier = Modifier
                         .size(28.dp)
-                        .background(color = Blue, shape = CircleShape)
+                        .background(color = Color(state.selectedColor), shape = CircleShape)
                         .border(
                             width = if (state.isColorsVisible) 1.5.dp else 0.dp,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = if (state.isColorsVisible) MaterialTheme.colorScheme.primary else Color.Transparent,
                             shape = CircleShape
                         ),
                 )

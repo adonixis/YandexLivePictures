@@ -1,6 +1,7 @@
 package ru.adonixis.yandexlivepictures
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import ru.adonixis.yandexlivepictures.theme.Black
 
 class MainViewModel : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -52,7 +54,7 @@ class MainViewModel : ViewModel() {
                 _state.update { currentState ->
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
                     val newHistory = currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).toMutableList()
-                    newHistory.add(DrawAction.DrawPath(action.path))
+                    newHistory.add(DrawAction.DrawPath(action.path, currentState.selectedColor))
                     
                     val updatedFrame = currentFrame.copy(
                         actionHistory = newHistory,
@@ -165,6 +167,9 @@ class MainViewModel : ViewModel() {
                     currentState.copy(frames = newFrames)
                 }
             }
+            is MainAction.SelectColor -> {
+                _state.update { it.copy(selectedColor = action.color) }
+            }
         }
     }
 
@@ -190,6 +195,7 @@ data class MainState(
     val currentFrameIndex: Int = 0,
     val isPlaybackActive: Boolean = false,
     val playbackFrameIndex: Int = 0,
+    val selectedColor: Int = Black.toArgb()
 )
 
 data class Frame(
@@ -211,10 +217,11 @@ sealed interface MainAction {
     data object DeleteCurrentFrame : MainAction
     data object StartPlayback : MainAction
     data object StopPlayback : MainAction
+    data class SelectColor(val color: Int) : MainAction
 }
 
 sealed interface DrawAction {
-    data class DrawPath(val path: List<Offset>) : DrawAction
+    data class DrawPath(val path: List<Offset>, val color: Int) : DrawAction
     data class ErasePath(val path: List<Offset>) : DrawAction
     data class DrawShape(val shape: Shape, val center: Offset, val size: Float) : DrawAction
 }
