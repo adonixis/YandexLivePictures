@@ -19,13 +19,22 @@ class MainViewModel : ViewModel() {
             MainAction.TogglePencilTool -> {
                 _state.update { it.copy(
                     isPencilEnabled = !it.isPencilEnabled,
-                    isEraserEnabled = false
+                    isEraserEnabled = false,
+                    isShapesVisible = false
                 ) }
             }
             MainAction.ToggleEraserTool -> {
                 _state.update { it.copy(
                     isEraserEnabled = !it.isEraserEnabled,
-                    isPencilEnabled = false
+                    isPencilEnabled = false,
+                    isShapesVisible = false
+                ) }
+            }
+            MainAction.ToggleShapesPanel -> {
+                _state.update { it.copy(
+                    isShapesVisible = !it.isShapesVisible,
+                    isPencilEnabled = false,
+                    isEraserEnabled = false
                 ) }
             }
             is MainAction.AddDrawingPath -> {
@@ -150,7 +159,8 @@ data class MainState(
     val frames: List<Frame> = listOf(Frame()),
     val currentFrameIndex: Int = 0,
     val isPlaybackActive: Boolean = false,
-    val playbackFrameIndex: Int = 0
+    val playbackFrameIndex: Int = 0,
+    val isShapesVisible: Boolean = false
 )
 
 data class Frame(
@@ -169,6 +179,7 @@ sealed interface MainAction {
     data object DeleteCurrentFrame : MainAction
     data object StartPlayback : MainAction
     data object StopPlayback : MainAction
+    data object ToggleShapesPanel : MainAction
 }
 
 sealed interface DrawAction {

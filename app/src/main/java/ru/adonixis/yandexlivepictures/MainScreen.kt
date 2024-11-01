@@ -1,8 +1,10 @@
 package ru.adonixis.yandexlivepictures
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -43,6 +46,12 @@ import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -212,231 +221,378 @@ fun MainScreen(
             }
         }
 
-        // Canvas
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(top = 32.dp, bottom = 22.dp)
-                .clip(shape = RoundedCornerShape(20.dp))
         ) {
-            Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.bg_paper),
-                contentDescription = "Paper background",
-                contentScale = ContentScale.Crop
-            )
-
-            Canvas(
+            // Canvas
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
-                        if (!state.isPlaybackActive) {
-                            when {
-                                state.isPencilEnabled -> {
-                                    awaitPointerEventScope {
-                                        var path = mutableListOf<Offset>()
-                                        while (true) {
-                                            val event = awaitPointerEvent()
-                                            when (event.type) {
-                                                PointerEventType.Press -> {
-                                                    val position = event.changes.first().position
-                                                    path = mutableListOf(position)
-                                                    currentPath.clear()
-                                                    currentPath.addAll(path)
-                                                }
-                                                PointerEventType.Move -> {
-                                                    val position = event.changes.first().position
-                                                    path.add(position)
-                                                    currentPath.clear()
-                                                    currentPath.addAll(path)
-                                                }
-                                                PointerEventType.Release -> {
-                                                    if (path.size == 1) {
-                                                        path.add(path.first())
-                                                    }
-                                                    viewModel.onAction(MainAction.AddDrawingPath(path))
-                                                    path = mutableListOf()
-                                                    currentPath.clear()
-                                                }
-                                                else -> { /* ignore */ }
-                                            }
-                                        }
-                                    }
-                                }
-                                state.isEraserEnabled -> {
-                                    awaitPointerEventScope {
-                                        var path = mutableListOf<Offset>()
-                                        while (true) {
-                                            val event = awaitPointerEvent()
-                                            when (event.type) {
-                                                PointerEventType.Press -> {
-                                                    val position = event.changes.first().position
-                                                    path = mutableListOf(position)
-                                                    currentEraserPath.clear()
-                                                    currentEraserPath.addAll(path)
-                                                }
-                                                PointerEventType.Move -> {
-                                                    val position = event.changes.first().position
-                                                    path.add(position)
-                                                    currentEraserPath.clear()
-                                                    currentEraserPath.addAll(path)
-                                                }
-                                                PointerEventType.Release -> {
-                                                    if (path.size == 1) {
-                                                        path.add(path.first())
-                                                    }
-                                                    viewModel.onAction(MainAction.AddEraserPath(path))
-                                                    path = mutableListOf()
-                                                    currentEraserPath.clear()
-                                                }
-                                                else -> { /* ignore */ }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
-                        // Существующий код для detectDragGestures остается без изменений
-                        if (!state.isPlaybackActive) {
-                            when {
-                                state.isPencilEnabled -> {
-                                    detectDragGestures(
-                                        onDragStart = { offset ->
-                                            currentPath.add(offset)
-                                        },
-                                        onDrag = { change, _ ->
-                                            change.consume()
-                                            currentPath.add(change.position)
-                                        },
-                                        onDragEnd = {
-                                            viewModel.onAction(MainAction.AddDrawingPath(currentPath.toList()))
-                                            currentPath.clear()
-                                        }
-                                    )
-                                }
-                                state.isEraserEnabled -> {
-                                    detectDragGestures(
-                                        onDragStart = { offset ->
-                                            currentEraserPath.add(offset)
-                                        },
-                                        onDrag = { change, _ ->
-                                            change.consume()
-                                            currentEraserPath.add(change.position)
-                                        },
-                                        onDragEnd = {
-                                            viewModel.onAction(MainAction.AddEraserPath(currentEraserPath.toList()))
-                                            currentEraserPath.clear()
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    .fillMaxWidth()
+                    .padding(top = 32.dp, bottom = 22.dp)
+                    .clip(shape = RoundedCornerShape(20.dp))
             ) {
-                with(drawContext.canvas.nativeCanvas) {
-                    val checkPoint = saveLayer(null, null)
+                Image(
+                    modifier = Modifier.fillMaxSize(),
+                    painter = painterResource(id = R.drawable.bg_paper),
+                    contentDescription = "Paper background",
+                    contentScale = ContentScale.Crop
+                )
 
-                    if (state.isPlaybackActive) {
-                        // Отрисовка текущего кадра анимации
-                        val playbackFrame = state.frames[state.playbackFrameIndex]
-                        playbackFrame.actionHistory.take(playbackFrame.currentHistoryPosition + 1).forEach { action ->
-                            when (action) {
-                                is DrawAction.DrawPath -> {
-                                    drawPath(
-                                        path = Path().apply { drawSmoothLine(action.path) },
-                                        color = Color.Black,
-                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                    )
-                                }
-                                is DrawAction.ErasePath -> {
-                                    drawPath(
-                                        path = Path().apply { drawSmoothLine(action.path) },
-                                        color = Color.Transparent,
-                                        style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-                                        blendMode = BlendMode.Clear
-                                    )
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
+                            if (!state.isPlaybackActive) {
+                                when {
+                                    state.isPencilEnabled -> {
+                                        awaitPointerEventScope {
+                                            var path = mutableListOf<Offset>()
+                                            while (true) {
+                                                val event = awaitPointerEvent()
+                                                when (event.type) {
+                                                    PointerEventType.Press -> {
+                                                        val position =
+                                                            event.changes.first().position
+                                                        path = mutableListOf(position)
+                                                        currentPath.clear()
+                                                        currentPath.addAll(path)
+                                                    }
+
+                                                    PointerEventType.Move -> {
+                                                        val position =
+                                                            event.changes.first().position
+                                                        path.add(position)
+                                                        currentPath.clear()
+                                                        currentPath.addAll(path)
+                                                    }
+
+                                                    PointerEventType.Release -> {
+                                                        if (path.size == 1) {
+                                                            path.add(path.first())
+                                                        }
+                                                        viewModel.onAction(
+                                                            MainAction.AddDrawingPath(
+                                                                path
+                                                            )
+                                                        )
+                                                        path = mutableListOf()
+                                                        currentPath.clear()
+                                                    }
+
+                                                    else -> { /* ignore */
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    state.isEraserEnabled -> {
+                                        awaitPointerEventScope {
+                                            var path = mutableListOf<Offset>()
+                                            while (true) {
+                                                val event = awaitPointerEvent()
+                                                when (event.type) {
+                                                    PointerEventType.Press -> {
+                                                        val position =
+                                                            event.changes.first().position
+                                                        path = mutableListOf(position)
+                                                        currentEraserPath.clear()
+                                                        currentEraserPath.addAll(path)
+                                                    }
+
+                                                    PointerEventType.Move -> {
+                                                        val position =
+                                                            event.changes.first().position
+                                                        path.add(position)
+                                                        currentEraserPath.clear()
+                                                        currentEraserPath.addAll(path)
+                                                    }
+
+                                                    PointerEventType.Release -> {
+                                                        if (path.size == 1) {
+                                                            path.add(path.first())
+                                                        }
+                                                        viewModel.onAction(
+                                                            MainAction.AddEraserPath(
+                                                                path
+                                                            )
+                                                        )
+                                                        path = mutableListOf()
+                                                        currentEraserPath.clear()
+                                                    }
+
+                                                    else -> { /* ignore */
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-                    } else {
-                        // Слой для предыдущего кадра
-                        if (state.currentFrameIndex > 0) {
-                            val previousCheckPoint = saveLayer(null, null)
-                            
-                            val previousFrame = state.frames[state.currentFrameIndex - 1]
-                            previousFrame.actionHistory.take(previousFrame.currentHistoryPosition + 1).forEach { action ->
-                                when (action) {
-                                    is DrawAction.DrawPath -> {
-                                        drawPath(
-                                            path = Path().apply { drawSmoothLine(action.path) },
-                                            color = Color.Gray.copy(alpha = 0.3f),
-                                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
+                            // Существующий код для detectDragGestures остается без изменений
+                            if (!state.isPlaybackActive) {
+                                when {
+                                    state.isPencilEnabled -> {
+                                        detectDragGestures(
+                                            onDragStart = { offset ->
+                                                currentPath.add(offset)
+                                            },
+                                            onDrag = { change, _ ->
+                                                change.consume()
+                                                currentPath.add(change.position)
+                                            },
+                                            onDragEnd = {
+                                                viewModel.onAction(
+                                                    MainAction.AddDrawingPath(
+                                                        currentPath.toList()
+                                                    )
+                                                )
+                                                currentPath.clear()
+                                            }
                                         )
                                     }
-                                    is DrawAction.ErasePath -> {
-                                        drawPath(
-                                            path = Path().apply { drawSmoothLine(action.path) },
-                                            color = Color.Transparent,
-                                            style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-                                            blendMode = BlendMode.Clear
+
+                                    state.isEraserEnabled -> {
+                                        detectDragGestures(
+                                            onDragStart = { offset ->
+                                                currentEraserPath.add(offset)
+                                            },
+                                            onDrag = { change, _ ->
+                                                change.consume()
+                                                currentEraserPath.add(change.position)
+                                            },
+                                            onDragEnd = {
+                                                viewModel.onAction(
+                                                    MainAction.AddEraserPath(
+                                                        currentEraserPath.toList()
+                                                    )
+                                                )
+                                                currentEraserPath.clear()
+                                            }
                                         )
                                     }
                                 }
                             }
-                            
-                            restoreToCount(previousCheckPoint)
                         }
+                ) {
+                    with(drawContext.canvas.nativeCanvas) {
+                        val checkPoint = saveLayer(null, null)
 
-                        // Отдельный слой для текущего кадра
-                        val currentCheckPoint = saveLayer(null, null)
+                        if (state.isPlaybackActive) {
+                            // Отрисовка текущего кадра анимации
+                            val playbackFrame = state.frames[state.playbackFrameIndex]
+                            playbackFrame.actionHistory.take(playbackFrame.currentHistoryPosition + 1)
+                                .forEach { action ->
+                                    when (action) {
+                                        is DrawAction.DrawPath -> {
+                                            drawPath(
+                                                path = Path().apply { drawSmoothLine(action.path) },
+                                                color = Color.Black,
+                                                style = Stroke(
+                                                    width = 2.dp.toPx(),
+                                                    cap = StrokeCap.Round,
+                                                    join = StrokeJoin.Round
+                                                )
+                                            )
+                                        }
 
-                        // Рисуем текущий кадр
-                        val currentFrame = state.frames[state.currentFrameIndex]
-                        currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).forEach { action ->
-                            when (action) {
-                                is DrawAction.DrawPath -> {
-                                    drawPath(
-                                        path = Path().apply { drawSmoothLine(action.path) },
-                                        color = Color.Black,
-                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                                    )
+                                        is DrawAction.ErasePath -> {
+                                            drawPath(
+                                                path = Path().apply { drawSmoothLine(action.path) },
+                                                color = Color.Transparent,
+                                                style = Stroke(
+                                                    width = 10.dp.toPx(),
+                                                    cap = StrokeCap.Round,
+                                                    join = StrokeJoin.Round
+                                                ),
+                                                blendMode = BlendMode.Clear
+                                            )
+                                        }
+                                    }
                                 }
-                                is DrawAction.ErasePath -> {
-                                    drawPath(
-                                        path = Path().apply { drawSmoothLine(action.path) },
-                                        color = Color.Transparent,
-                                        style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-                                        blendMode = BlendMode.Clear
-                                    )
-                                }
+                        } else {
+                            // Слой для предыдущего кадра
+                            if (state.currentFrameIndex > 0) {
+                                val previousCheckPoint = saveLayer(null, null)
+
+                                val previousFrame = state.frames[state.currentFrameIndex - 1]
+                                previousFrame.actionHistory.take(previousFrame.currentHistoryPosition + 1)
+                                    .forEach { action ->
+                                        when (action) {
+                                            is DrawAction.DrawPath -> {
+                                                drawPath(
+                                                    path = Path().apply { drawSmoothLine(action.path) },
+                                                    color = Color.Gray.copy(alpha = 0.3f),
+                                                    style = Stroke(
+                                                        width = 2.dp.toPx(),
+                                                        cap = StrokeCap.Round,
+                                                        join = StrokeJoin.Round
+                                                    )
+                                                )
+                                            }
+
+                                            is DrawAction.ErasePath -> {
+                                                drawPath(
+                                                    path = Path().apply { drawSmoothLine(action.path) },
+                                                    color = Color.Transparent,
+                                                    style = Stroke(
+                                                        width = 10.dp.toPx(),
+                                                        cap = StrokeCap.Round,
+                                                        join = StrokeJoin.Round
+                                                    ),
+                                                    blendMode = BlendMode.Clear
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                restoreToCount(previousCheckPoint)
                             }
+
+                            // Отдельный слой для текущего кадра
+                            val currentCheckPoint = saveLayer(null, null)
+
+                            // Рисуем текущий кадр
+                            val currentFrame = state.frames[state.currentFrameIndex]
+                            currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1)
+                                .forEach { action ->
+                                    when (action) {
+                                        is DrawAction.DrawPath -> {
+                                            drawPath(
+                                                path = Path().apply { drawSmoothLine(action.path) },
+                                                color = Color.Black,
+                                                style = Stroke(
+                                                    width = 2.dp.toPx(),
+                                                    cap = StrokeCap.Round,
+                                                    join = StrokeJoin.Round
+                                                )
+                                            )
+                                        }
+
+                                        is DrawAction.ErasePath -> {
+                                            drawPath(
+                                                path = Path().apply { drawSmoothLine(action.path) },
+                                                color = Color.Transparent,
+                                                style = Stroke(
+                                                    width = 10.dp.toPx(),
+                                                    cap = StrokeCap.Round,
+                                                    join = StrokeJoin.Round
+                                                ),
+                                                blendMode = BlendMode.Clear
+                                            )
+                                        }
+                                    }
+                                }
+
+                            // Отрисовка текущих путей
+                            if (currentPath.size > 1) {
+                                drawPath(
+                                    path = Path().apply { drawSmoothLine(currentPath) },
+                                    color = Color.Black,
+                                    style = Stroke(
+                                        width = 2.dp.toPx(),
+                                        cap = StrokeCap.Round,
+                                        join = StrokeJoin.Round
+                                    )
+                                )
+                            }
+
+                            if (currentEraserPath.size > 1) {
+                                drawPath(
+                                    path = Path().apply { drawSmoothLine(currentEraserPath) },
+                                    color = Color.Transparent,
+                                    style = Stroke(
+                                        width = 10.dp.toPx(),
+                                        cap = StrokeCap.Round,
+                                        join = StrokeJoin.Round
+                                    ),
+                                    blendMode = BlendMode.Clear
+                                )
+                            }
+
+                            restoreToCount(currentCheckPoint)
                         }
 
-                        // Отрисовка текущих путей
-                        if (currentPath.size > 1) {
-                            drawPath(
-                                path = Path().apply { drawSmoothLine(currentPath) },
-                                color = Color.Black,
-                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-                            )
-                        }
+                        restoreToCount(checkPoint)
+                    }
+                }
+            }
 
-                        if (currentEraserPath.size > 1) {
-                            drawPath(
-                                path = Path().apply { drawSmoothLine(currentEraserPath) },
-                                color = Color.Transparent,
-                                style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-                                blendMode = BlendMode.Clear
-                            )
-                        }
-
-                        restoreToCount(currentCheckPoint)
+            // Панель с фигурами
+            this@Column.AnimatedVisibility(
+                visible = state.isShapesVisible,
+                enter = fadeIn(
+                    animationSpec = tween(durationMillis = 200)
+                ),
+                exit = fadeOut(
+                    animationSpec = tween(durationMillis = 200)
+                ),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .background(
+                            color = Color.Black.copy(alpha = 0.14f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFF555454).copy(alpha = 0.16f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        modifier = Modifier
+                            .size(32.dp),
+                        onClick = {}
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_square_24),
+                            contentDescription = "Square icon"
+                        )
                     }
 
-                    restoreToCount(checkPoint)
+                    IconButton(
+                        modifier = Modifier
+                            .size(32.dp),
+                        onClick = {}
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_circle_24),
+                            contentDescription = "Circle icon"
+                        )
+                    }
+
+                    IconButton(
+                        modifier = Modifier
+                            .size(32.dp),
+                        onClick = {}
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_triangle_24),
+                            contentDescription = "Triangle icon"
+                        )
+                    }
+
+                    IconButton(
+                        modifier = Modifier
+                            .size(32.dp),
+                        onClick = {}
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_arrow_up_24),
+                            contentDescription = "Arrow up icon"
+                        )
+                    }
                 }
             }
         }
@@ -493,12 +649,16 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(32.dp),
-                onClick = { },
+                onClick = { viewModel.onAction(MainAction.ToggleShapesPanel) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_instruments_32),
-                    contentDescription = "Instruments icon"
+                    contentDescription = "Instruments icon",
+                    tint = if (state.isShapesVisible)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurface
                 )
             }
 
