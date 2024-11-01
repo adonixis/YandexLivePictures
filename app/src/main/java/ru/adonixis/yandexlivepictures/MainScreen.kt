@@ -82,7 +82,6 @@ private fun Path.drawSmoothLine(points: List<Offset>) {
     }
 }
 
-// Добавим функции для рисования фигур
 private fun DrawScope.drawSquare(center: Offset, size: Float, alpha: Float = 1f) {
     val path = Path().apply {
         moveTo(center.x - size/2, center.y - size/2)
