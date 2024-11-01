@@ -156,9 +156,9 @@ fun MainScreen(
         // Верхняя панель с кнопками
         Row(
             modifier = Modifier
-                .padding(top = 16.dp)
+                .padding(top = 14.dp)
                 .fillMaxWidth()
-                .height(32.dp),
+                .height(36.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -206,10 +206,10 @@ fun MainScreen(
             Row(
                 modifier = Modifier.alpha(if (state.isPlaybackActive) 0f else 1f),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 IconButton(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(36.dp),
                     onClick = { viewModel.onAction(MainAction.DeleteCurrentFrame) },
                     enabled = !state.isPlaybackActive && state.frames.size > 1
                 ) {
@@ -224,7 +224,7 @@ fun MainScreen(
                 }
 
                 IconButton(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(36.dp),
                     onClick = { viewModel.onAction(MainAction.AddNewFrame) },
                     enabled = !state.isPlaybackActive
                 ) {
@@ -235,7 +235,7 @@ fun MainScreen(
                 }
 
                 IconButton(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(36.dp),
                     onClick = { },
                     enabled = !state.isPlaybackActive
                 ) {
@@ -249,10 +249,10 @@ fun MainScreen(
             // Правая группа кнопок (Play и Stop) - всегда видима
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 IconButton(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(36.dp),
                     onClick = { viewModel.onAction(MainAction.StopPlayback) },
                     enabled = state.isPlaybackActive
                 ) {
@@ -267,7 +267,7 @@ fun MainScreen(
                 }
 
                 IconButton(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(36.dp),
                     onClick = { viewModel.onAction(MainAction.StartPlayback) },
                     enabled = !state.isPlaybackActive && state.frames.size > 1
                 ) {
@@ -293,7 +293,7 @@ fun MainScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 32.dp, bottom = 22.dp)
+                    .padding(top = 32.dp, bottom = 20.dp)
                     .clip(shape = RoundedCornerShape(20.dp))
             ) {
                 Image(
@@ -671,14 +671,14 @@ fun MainScreen(
         // Нижняя панель с инструментами
         Row(
             modifier = Modifier
-                .padding(bottom = 16.dp)
-                .height(32.dp)
+                .padding(bottom = 14.dp)
+                .height(36.dp)
                 .alpha(if (state.isPlaybackActive) 0f else 1f),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(36.dp),
                 onClick = { viewModel.onAction(MainAction.TogglePencilTool) },
                 enabled = !state.isPlaybackActive
             ) {
@@ -693,7 +693,7 @@ fun MainScreen(
             }
 
             IconButton(
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(36.dp),
                 onClick = { },
                 enabled = !state.isPlaybackActive
             ) {
@@ -704,7 +704,7 @@ fun MainScreen(
             }
 
             IconButton(
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(36.dp),
                 onClick = { viewModel.onAction(MainAction.ToggleEraserTool) },
                 enabled = !state.isPlaybackActive
             ) {
@@ -719,7 +719,7 @@ fun MainScreen(
             }
 
             IconButton(
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(36.dp),
                 onClick = { viewModel.onAction(MainAction.ToggleShapesPanel) },
                 enabled = !state.isPlaybackActive
             ) {
@@ -734,7 +734,7 @@ fun MainScreen(
             }
 
             IconButton(
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(36.dp),
                 onClick = { },
                 enabled = !state.isPlaybackActive
             ) {
