@@ -20,21 +20,32 @@ class MainViewModel : ViewModel() {
                 _state.update { it.copy(
                     isPencilEnabled = !it.isPencilEnabled,
                     isEraserEnabled = false,
-                    isShapesVisible = false
+                    isShapesVisible = false,
+                    isColorsVisible = false
                 ) }
             }
             MainAction.ToggleEraserTool -> {
                 _state.update { it.copy(
                     isEraserEnabled = !it.isEraserEnabled,
                     isPencilEnabled = false,
-                    isShapesVisible = false
+                    isShapesVisible = false,
+                    isColorsVisible = false
                 ) }
             }
             MainAction.ToggleShapesPanel -> {
                 _state.update { it.copy(
                     isShapesVisible = !it.isShapesVisible,
                     isPencilEnabled = false,
-                    isEraserEnabled = false
+                    isEraserEnabled = false,
+                    isColorsVisible = false
+                ) }
+            }
+            MainAction.ToggleColorsPanel -> {
+                _state.update { it.copy(
+                    isColorsVisible = !it.isColorsVisible,
+                    isPencilEnabled = false,
+                    isEraserEnabled = false,
+                    isShapesVisible = false
                 ) }
             }
             is MainAction.AddDrawingPath -> {
@@ -173,11 +184,12 @@ class MainViewModel : ViewModel() {
 data class MainState(
     val isPencilEnabled: Boolean = false,
     val isEraserEnabled: Boolean = false,
+    val isShapesVisible: Boolean = false,
+    val isColorsVisible: Boolean = false,
     val frames: List<Frame> = listOf(Frame()),
     val currentFrameIndex: Int = 0,
     val isPlaybackActive: Boolean = false,
     val playbackFrameIndex: Int = 0,
-    val isShapesVisible: Boolean = false
 )
 
 data class Frame(
@@ -188,16 +200,17 @@ data class Frame(
 sealed interface MainAction {
     data object TogglePencilTool : MainAction
     data object ToggleEraserTool : MainAction
+    data object ToggleShapesPanel : MainAction
+    data object ToggleColorsPanel : MainAction
     data class AddDrawingPath(val path: List<Offset>) : MainAction
     data class AddEraserPath(val path: List<Offset>) : MainAction
+    data class AddShape(val shape: Shape, val center: Offset, val size: Float) : MainAction
     data object Undo : MainAction
     data object Redo : MainAction
     data object AddNewFrame : MainAction
     data object DeleteCurrentFrame : MainAction
     data object StartPlayback : MainAction
     data object StopPlayback : MainAction
-    data object ToggleShapesPanel : MainAction
-    data class AddShape(val shape: Shape, val center: Offset, val size: Float) : MainAction
 }
 
 sealed interface DrawAction {

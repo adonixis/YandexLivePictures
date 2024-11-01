@@ -57,6 +57,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.toSize
+import ru.adonixis.yandexlivepictures.theme.Black
+import ru.adonixis.yandexlivepictures.theme.Red
+import ru.adonixis.yandexlivepictures.theme.White
 import kotlin.math.min
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
@@ -665,6 +668,89 @@ fun MainScreen(
                     }
                 }
             }
+
+            // Панель с цветами
+            this@Column.AnimatedVisibility(
+                visible = state.isColorsVisible,
+                enter = fadeIn(
+                    animationSpec = tween(durationMillis = 200)
+                ),
+                exit = fadeOut(
+                    animationSpec = tween(durationMillis = 200)
+                ),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = 16.dp)
+                        .background(
+                            color = Color.Black.copy(alpha = 0.14f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFF555454).copy(alpha = 0.16f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = {}
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_color_palette_32),
+                            contentDescription = "Color palette icon"
+                        )
+                    }
+
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = {}
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(color = White, shape = CircleShape),
+                        )
+                    }
+
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = {}
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(color = Red, shape = CircleShape),
+                        )
+                    }
+
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = {}
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(color = Black, shape = CircleShape),
+                        )
+                    }
+
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = {}
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .background(color = Blue, shape = CircleShape),
+                        )
+                    }
+                }
+            }
         }
 
         // Нижняя панель с инструментами
@@ -734,13 +820,18 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { },
+                onClick = { viewModel.onAction(MainAction.ToggleColorsPanel) },
                 enabled = !state.isPlaybackActive
             ) {
                 Box(
                     modifier = Modifier
                         .size(28.dp)
-                        .background(color = Blue, shape = CircleShape),
+                        .background(color = Blue, shape = CircleShape)
+                        .border(
+                            width = if (state.isColorsVisible) 1.5.dp else 0.dp,
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = CircleShape
+                        ),
                 )
             }
         }
