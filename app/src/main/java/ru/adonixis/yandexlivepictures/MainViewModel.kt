@@ -224,7 +224,7 @@ data class MainState(
     val playbackFrameIndex: Int = 0,
     val selectedColor: Int = Black.toArgb(),
     val isEraserWidthSliderVisible: Boolean = false,
-    val eraserWidth: Float = 10f
+    val eraserWidth: Float = 20f
 )
 
 data class Frame(

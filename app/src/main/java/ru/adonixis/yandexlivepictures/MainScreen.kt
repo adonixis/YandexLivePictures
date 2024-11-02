@@ -296,7 +296,7 @@ fun MainScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 32.dp, bottom = 20.dp)
+                    .padding(top = 32.dp, bottom = 22.dp)
                     .clip(shape = RoundedCornerShape(20.dp))
             ) {
                 Image(
@@ -596,7 +596,7 @@ fun MainScreen(
                     modifier = Modifier
                         .padding(bottom = 16.dp)
                         .background(
-                            color = Color.Black.copy(alpha = 0.14f),
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
                             shape = RoundedCornerShape(4.dp)
                         )
                         .border(
@@ -763,7 +763,7 @@ fun MainScreen(
                         modifier = Modifier
                             .padding(bottom = 16.dp)
                             .background(
-                                color = Color.Black.copy(alpha = 0.14f),
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
@@ -891,6 +891,43 @@ fun MainScreen(
                     }
                 }
             }
+
+            // Панель со слайдером
+            this@Column.AnimatedVisibility(
+                visible = state.isEraserWidthSliderVisible,
+                enter = fadeIn(
+                    animationSpec = tween(durationMillis = 200)
+                ),
+                exit = fadeOut(
+                    animationSpec = tween(durationMillis = 200)
+                ),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFF555454).copy(alpha = 0.16f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(16.dp)
+                ) {
+                    Slider(
+                        modifier = Modifier
+                            ,
+                        value = state.eraserWidth,
+                        onValueChange = {
+                            viewModel.onAction(MainAction.UpdateEraserWidth(it))
+                        },
+                        valueRange = 2f..100f
+                    )
+                }
+            }
         }
 
         // Нижняя панель с инструментами
@@ -928,59 +965,19 @@ fun MainScreen(
                 )
             }
 
-            Box {
-                IconButton(
-                    modifier = Modifier.size(36.dp),
-                    onClick = { viewModel.onAction(MainAction.ToggleEraserTool) },
-                    enabled = !state.isPlaybackActive
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_erase_32),
-                        contentDescription = "Erase icon",
-                        tint = if (state.isEraserEnabled)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                // Слайдер для толщины ластика
-                this@Row.AnimatedVisibility(
-                    visible = state.isEraserWidthSliderVisible,
-                    enter = fadeIn(animationSpec = tween(200)),
-                    exit = fadeOut(animationSpec = tween(200)),
-                    modifier = Modifier
-                        .width(200.dp)
-                        .align(Alignment.TopCenter)
-                        .offset(y = (-50).dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = MaterialTheme.colorScheme.surface,
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline,
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Slider(
-                            value = state.eraserWidth,
-                            onValueChange = {
-                                viewModel.onAction(MainAction.UpdateEraserWidth(it))
-                            },
-                            valueRange = 2f..30f,
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary,
-                                inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                            )
-                        )
-                    }
-                }
+            IconButton(
+                modifier = Modifier.size(36.dp),
+                onClick = { viewModel.onAction(MainAction.ToggleEraserTool) },
+                enabled = !state.isPlaybackActive
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_erase_32),
+                    contentDescription = "Erase icon",
+                    tint = if (state.isEraserEnabled)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurface
+                )
             }
 
             IconButton(
