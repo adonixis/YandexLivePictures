@@ -312,7 +312,7 @@ fun MainScreen(
                         .onSizeChanged {
                             canvasSize = it.toSize()
                         }
-                        .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
+                        .pointerInput(state.isPencilEnabled, state.isEraserEnabled, state.isBrushEnabled) {
                             if (!state.isPlaybackActive) {
                                 when {
                                     state.isPencilEnabled -> {
@@ -327,6 +327,49 @@ fun MainScreen(
                                                         path = mutableListOf(position)
                                                         currentPath.clear()
                                                         currentPath.addAll(path)
+                                                    }
+
+                                                    PointerEventType.Move -> {
+                                                        val position =
+                                                            event.changes.first().position
+                                                        path.add(position)
+                                                        currentPath.clear()
+                                                        currentPath.addAll(path)
+                                                    }
+
+                                                    PointerEventType.Release -> {
+                                                        if (path.size == 1) {
+                                                            path.add(path.first())
+                                                        }
+                                                        viewModel.onAction(
+                                                            MainAction.AddDrawingPath(
+                                                                path
+                                                            )
+                                                        )
+                                                        path = mutableListOf()
+                                                        currentPath.clear()
+                                                    }
+
+                                                    else -> { /* ignore */
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    state.isBrushEnabled -> {
+                                        awaitPointerEventScope {
+                                            var path = mutableListOf<Offset>()
+                                            while (true) {
+                                                val event = awaitPointerEvent()
+                                                when (event.type) {
+                                                    PointerEventType.Press -> {
+                                                        val position =
+                                                            event.changes.first().position
+                                                        path = mutableListOf(position)
+                                                        currentPath.clear()
+                                                        currentPath.addAll(path)
+                                                        viewModel.onAction(MainAction.HideBrushWidthSlider)
                                                     }
 
                                                     PointerEventType.Move -> {
@@ -417,7 +460,7 @@ fun MainScreen(
                                                 path = Path().apply { drawSmoothLine(action.path) },
                                                 color = Color(action.color),
                                                 style = Stroke(
-                                                    width = 2.dp.toPx(),
+                                                    width = action.width.dp.toPx(),
                                                     cap = StrokeCap.Round,
                                                     join = StrokeJoin.Round
                                                 )
@@ -460,7 +503,7 @@ fun MainScreen(
                                                     path = Path().apply { drawSmoothLine(action.path) },
                                                     color = Color(action.color).copy(alpha = 0.3f),
                                                     style = Stroke(
-                                                        width = 2.dp.toPx(),
+                                                        width = action.width.dp.toPx(),
                                                         cap = StrokeCap.Round,
                                                         join = StrokeJoin.Round
                                                     )
@@ -506,7 +549,7 @@ fun MainScreen(
                                                 path = Path().apply { drawSmoothLine(action.path) },
                                                 color = Color(action.color),
                                                 style = Stroke(
-                                                    width = 2.dp.toPx(),
+                                                    width = action.width.dp.toPx(),
                                                     cap = StrokeCap.Round,
                                                     join = StrokeJoin.Round
                                                 )
@@ -542,7 +585,7 @@ fun MainScreen(
                                     path = Path().apply { drawSmoothLine(currentPath) },
                                     color = Color(state.selectedColor),
                                     style = Stroke(
-                                        width = 2.dp.toPx(),
+                                        width = (if (state.isPencilEnabled) 2f else state.brushWidth).dp.toPx(),
                                         cap = StrokeCap.Round,
                                         join = StrokeJoin.Round
                                     )
@@ -897,15 +940,11 @@ fun MainScreen(
                 }
             }
 
-            // Панель со слайдером
+            // Панель со слайдером ластика
             this@Column.AnimatedVisibility(
                 visible = state.isEraserWidthSliderVisible,
-                enter = fadeIn(
-                    animationSpec = tween(durationMillis = 200)
-                ),
-                exit = fadeOut(
-                    animationSpec = tween(durationMillis = 200)
-                ),
+                enter = fadeIn(animationSpec = tween(durationMillis = 200)),
+                exit = fadeOut(animationSpec = tween(durationMillis = 200)),
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 Box(
@@ -923,12 +962,37 @@ fun MainScreen(
                         .padding(16.dp)
                 ) {
                     Slider(
-                        modifier = Modifier
-                            ,
                         value = state.eraserWidth,
-                        onValueChange = {
-                            viewModel.onAction(MainAction.UpdateEraserWidth(it))
-                        },
+                        onValueChange = { viewModel.onAction(MainAction.UpdateEraserWidth(it)) },
+                        valueRange = 2f..100f
+                    )
+                }
+            }
+
+            // Панель со слайдером ластика
+            this@Column.AnimatedVisibility(
+                visible = state.isBrushWidthSliderVisible,
+                enter = fadeIn(animationSpec = tween(durationMillis = 200)),
+                exit = fadeOut(animationSpec = tween(durationMillis = 200)),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color(0xFF555454).copy(alpha = 0.16f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(16.dp)
+                ) {
+                    Slider(
+                        value = state.brushWidth,
+                        onValueChange = { viewModel.onAction(MainAction.UpdateBrushWidth(it)) },
                         valueRange = 2f..100f
                     )
                 }
@@ -961,12 +1025,16 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { },
+                onClick = { viewModel.onAction(MainAction.EnableBrushTool) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_brush_32),
-                    contentDescription = "Brush icon"
+                    contentDescription = "Brush icon",
+                    tint = if (state.isBrushEnabled)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurface
                 )
             }
 

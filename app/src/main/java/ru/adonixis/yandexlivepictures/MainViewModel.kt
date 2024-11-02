@@ -21,6 +21,20 @@ class MainViewModel : ViewModel() {
             MainAction.EnablePencilTool -> {
                 _state.update { it.copy(
                     isPencilEnabled = true,
+                    isBrushEnabled = false,
+                    isEraserEnabled = false,
+                    isShapesVisible = false,
+                    isColorsVisible = false,
+                    isExtendedColorsVisible = false,
+                    isEraserWidthSliderVisible = false,
+                    isBrushWidthSliderVisible = false
+                ) }
+            }
+            MainAction.EnableBrushTool -> {
+                _state.update { it.copy(
+                    isBrushEnabled = true,
+                    isBrushWidthSliderVisible = true,
+                    isPencilEnabled = false,
                     isEraserEnabled = false,
                     isShapesVisible = false,
                     isColorsVisible = false,
@@ -33,19 +47,23 @@ class MainViewModel : ViewModel() {
                     isEraserEnabled = true,
                     isEraserWidthSliderVisible = true,
                     isPencilEnabled = false,
+                    isBrushEnabled = false,
                     isShapesVisible = false,
                     isColorsVisible = false,
-                    isExtendedColorsVisible = false
+                    isExtendedColorsVisible = false,
+                    isBrushWidthSliderVisible = false
                 ) }
             }
             MainAction.ShowShapesPanel -> {
                 _state.update { it.copy(
                     isShapesVisible = true,
                     isPencilEnabled = false,
+                    isBrushEnabled = false,
                     isEraserEnabled = false,
                     isColorsVisible = false,
                     isExtendedColorsVisible = false,
-                    isEraserWidthSliderVisible = false
+                    isEraserWidthSliderVisible = false,
+                    isBrushWidthSliderVisible = false
                 ) }
             }
             MainAction.ShowColorsPanel -> {
@@ -53,9 +71,11 @@ class MainViewModel : ViewModel() {
                     isColorsVisible = true,
                     isExtendedColorsVisible = false,
                     isPencilEnabled = false,
+                    isBrushEnabled = false,
                     isEraserEnabled = false,
                     isShapesVisible = false,
-                    isEraserWidthSliderVisible = false
+                    isEraserWidthSliderVisible = false,
+                    isBrushWidthSliderVisible = false
                 ) }
             }
             MainAction.HideColorsPanel -> {
@@ -79,11 +99,28 @@ class MainViewModel : ViewModel() {
                     eraserWidth = action.width
                 ) }
             }
+            MainAction.HideBrushWidthSlider -> {
+                _state.update { it.copy(
+                    isBrushWidthSliderVisible = false
+                ) }
+            }
+            is MainAction.UpdateBrushWidth -> {
+                _state.update { it.copy(
+                    brushWidth = action.width
+                ) }
+            }
             is MainAction.AddDrawingPath -> {
                 _state.update { currentState ->
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
                     val newHistory = currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).toMutableList()
-                    newHistory.add(DrawAction.DrawPath(action.path, currentState.selectedColor))
+                    
+                    val width = if (currentState.isPencilEnabled) 2f else currentState.brushWidth
+                    
+                    newHistory.add(DrawAction.DrawPath(
+                        path = action.path,
+                        color = currentState.selectedColor,
+                        width = width
+                    ))
                     
                     val updatedFrame = currentFrame.copy(
                         actionHistory = newHistory,
@@ -100,7 +137,10 @@ class MainViewModel : ViewModel() {
                 _state.update { currentState ->
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
                     val newHistory = currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).toMutableList()
-                    newHistory.add(DrawAction.ErasePath(action.path, currentState.eraserWidth))
+                    newHistory.add(DrawAction.ErasePath(
+                        path = action.path,
+                        width = currentState.eraserWidth
+                    ))
                     
                     val updatedFrame = currentFrame.copy(
                         actionHistory = newHistory,
@@ -223,6 +263,7 @@ class MainViewModel : ViewModel() {
 
 data class MainState(
     val isPencilEnabled: Boolean = true,
+    val isBrushEnabled: Boolean = false,
     val isEraserEnabled: Boolean = false,
     val isShapesVisible: Boolean = false,
     val isColorsVisible: Boolean = false,
@@ -233,7 +274,9 @@ data class MainState(
     val playbackFrameIndex: Int = 0,
     val selectedColor: Int = Black.toArgb(),
     val isEraserWidthSliderVisible: Boolean = false,
-    val eraserWidth: Float = 20f
+    val eraserWidth: Float = 20f,
+    val isBrushWidthSliderVisible: Boolean = false,
+    val brushWidth: Float = 20f
 )
 
 data class Frame(
@@ -260,10 +303,13 @@ sealed interface MainAction {
     data object StartPlayback : MainAction
     data object StopPlayback : MainAction
     data class SelectColor(val color: Int) : MainAction
+    data object EnableBrushTool : MainAction
+    data object HideBrushWidthSlider : MainAction
+    data class UpdateBrushWidth(val width: Float) : MainAction
 }
 
 sealed interface DrawAction {
-    data class DrawPath(val path: List<Offset>, val color: Int) : DrawAction
+    data class DrawPath(val path: List<Offset>, val color: Int, val width: Float) : DrawAction
     data class ErasePath(val path: List<Offset>, val width: Float) : DrawAction
     data class DrawShape(val shape: Shape, val center: Offset, val size: Float, val color: Int) : DrawAction
 }
