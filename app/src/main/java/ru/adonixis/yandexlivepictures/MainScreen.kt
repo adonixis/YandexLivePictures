@@ -65,6 +65,7 @@ import kotlin.math.min
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.luminance
+import kotlin.math.ceil
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -685,7 +686,7 @@ fun MainScreen(
                         animationSpec = tween(durationMillis = 200)
                     )
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .background(
                                 color = Color(0xFF545559).copy(alpha = 0.10f),
@@ -697,132 +698,42 @@ fun MainScreen(
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Color(0xFF4E7A25).toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
-                            }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Color(0xFF4E7A25), shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Color(0xFF4E7A25).toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
+                        val rows = ceil((Colors.extendedColors.size.toFloat() / 5.0f)).toInt()
+                        for (row in 0 until rows) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                for (col in 0..4) {
+                                    val color = Colors.extendedColors[row * 5 + col]
+                                    IconButton(
+                                        modifier = Modifier.size(32.dp),
+                                        onClick = {
+                                            viewModel.onAction(MainAction.SelectColor(color.toArgb()))
+                                            viewModel.onAction(MainAction.ToggleColorsPanel)
                                         }
-                                    ),
-                            )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Color(0xFF9D234C).toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .background(color = color, shape = CircleShape)
+                                                .then(
+                                                    if (state.selectedColor == color.toArgb()) {
+                                                        Modifier.border(
+                                                            width = 1.5.dp,
+                                                            color = MaterialTheme.colorScheme.primary,
+                                                            shape = CircleShape
+                                                        )
+                                                    } else {
+                                                        Modifier
+                                                    }
+                                                ),
+                                        )
+                                    }
+                                }
                             }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Color(0xFF9D234C), shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Color(0xFF9D234C).toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
-                                        }
-                                    ),
-                            )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Color(0xFFFF3D00).toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
-                            }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Color(0xFFFF3D00), shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Color(0xFFFF3D00).toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
-                                        }
-                                    ),
-                            )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Color(0xFF641580).toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
-                            }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Color(0xFF641580), shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Color(0xFF641580).toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
-                                        }
-                                    ),
-                            )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Color(0xFF1976D2).toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
-                            }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Color(0xFF1976D2), shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Color(0xFF1976D2).toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
-                                        }
-                                    ),
-                            )
                         }
                     }
                 }
