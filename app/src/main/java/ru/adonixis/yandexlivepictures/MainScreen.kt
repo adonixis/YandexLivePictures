@@ -549,7 +549,7 @@ fun MainScreen(
                                 )
                             }
 
-                            if (currentEraserPath.size > 1) {
+                            if (currentEraserPath.isNotEmpty()) {
                                 drawPath(
                                     path = Path().apply { drawSmoothLine(currentEraserPath) },
                                     color = Color.Transparent,
