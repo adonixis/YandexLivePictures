@@ -131,15 +131,21 @@ class MainViewModel : ViewModel() {
             }
             MainAction.DeleteCurrentFrame -> {
                 _state.update { currentState ->
-                    if (currentState.frames.size <= 1) return@update currentState
-                    
-                    val newFrames = currentState.frames.toMutableList()
-                    newFrames.removeAt(currentState.currentFrameIndex)
-                    
-                    currentState.copy(
-                        frames = newFrames,
-                        currentFrameIndex = currentState.currentFrameIndex - 1
-                    )
+                    if (currentState.frames.size <= 1) {
+                        val newFrames = listOf(Frame())
+                        currentState.copy(
+                            frames = newFrames,
+                            currentFrameIndex = 0
+                        )
+                    } else {
+                        val newFrames = currentState.frames.toMutableList()
+                        newFrames.removeAt(currentState.currentFrameIndex)
+                        
+                        currentState.copy(
+                            frames = newFrames,
+                            currentFrameIndex = currentState.currentFrameIndex - 1
+                        )
+                    }
                 }
             }
             MainAction.StartPlayback -> {

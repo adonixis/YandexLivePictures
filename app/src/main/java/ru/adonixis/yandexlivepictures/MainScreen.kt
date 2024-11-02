@@ -217,15 +217,12 @@ fun MainScreen(
                 IconButton(
                     modifier = Modifier.size(36.dp),
                     onClick = { viewModel.onAction(MainAction.DeleteCurrentFrame) },
-                    enabled = !state.isPlaybackActive && state.frames.size > 1
+                    enabled = !state.isPlaybackActive
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_bin_32),
                         contentDescription = "Delete current frame",
-                        tint = if (state.frames.size > 1)
-                            MaterialTheme.colorScheme.onSurface
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
