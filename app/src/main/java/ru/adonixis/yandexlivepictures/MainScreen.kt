@@ -86,7 +86,7 @@ private fun Path.drawSmoothLine(points: List<Offset>) {
     }
 }
 
-private fun DrawScope.drawSquare(center: Offset, size: Float, alpha: Float = 1f) {
+private fun DrawScope.drawSquare(center: Offset, size: Float, color: Color) {
     val path = Path().apply {
         moveTo(center.x - size/2, center.y - size/2)
         lineTo(center.x + size/2, center.y - size/2)
@@ -96,21 +96,21 @@ private fun DrawScope.drawSquare(center: Offset, size: Float, alpha: Float = 1f)
     }
     drawPath(
         path = path,
-        color = Color.Black.copy(alpha = alpha),
+        color = color,
         style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
     )
 }
 
-private fun DrawScope.drawCircle(center: Offset, size: Float, alpha: Float = 1f) {
+private fun DrawScope.drawCircle(center: Offset, size: Float, color: Color) {
     drawCircle(
-        color = Color.Black.copy(alpha = alpha),
+        color = color,
         radius = size/2,
         center = center,
         style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
     )
 }
 
-private fun DrawScope.drawTriangle(center: Offset, size: Float, alpha: Float = 1f) {
+private fun DrawScope.drawTriangle(center: Offset, size: Float, color: Color) {
     val path = Path().apply {
         moveTo(center.x, center.y - size/2)
         lineTo(center.x + size/2, center.y + size/2)
@@ -119,12 +119,12 @@ private fun DrawScope.drawTriangle(center: Offset, size: Float, alpha: Float = 1
     }
     drawPath(
         path = path,
-        color = Color.Black.copy(alpha = alpha),
+        color = color,
         style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
     )
 }
 
-private fun DrawScope.drawArrow(center: Offset, size: Float, alpha: Float = 1f) {
+private fun DrawScope.drawArrow(center: Offset, size: Float, color: Color) {
     val path = Path().apply {
         moveTo(center.x, center.y - size/2)
         lineTo(center.x - size/3, center.y - size/6)
@@ -135,7 +135,7 @@ private fun DrawScope.drawArrow(center: Offset, size: Float, alpha: Float = 1f) 
     }
     drawPath(
         path = path,
-        color = Color.Black.copy(alpha = alpha),
+        color = color,
         style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
     )
 }
@@ -437,10 +437,10 @@ fun MainScreen(
                                         }
                                         is DrawAction.DrawShape -> {
                                             when (action.shape) {
-                                                Shape.Square -> drawSquare(action.center, action.size, alpha = 1f)
-                                                Shape.Circle -> drawCircle(action.center, action.size, alpha = 1f)
-                                                Shape.Triangle -> drawTriangle(action.center, action.size, alpha = 1f)
-                                                Shape.Arrow -> drawArrow(action.center, action.size, alpha = 1f)
+                                                Shape.Square -> drawSquare(action.center, action.size, Color(action.color))
+                                                Shape.Circle -> drawCircle(action.center, action.size, Color(action.color))
+                                                Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color))
+                                                Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color))
                                             }
                                         }
                                     }
@@ -480,10 +480,10 @@ fun MainScreen(
                                             }
                                             is DrawAction.DrawShape -> {
                                                 when (action.shape) {
-                                                    Shape.Square -> drawSquare(action.center, action.size, alpha = 0.3f)
-                                                    Shape.Circle -> drawCircle(action.center, action.size, alpha = 0.3f)
-                                                    Shape.Triangle -> drawTriangle(action.center, action.size, alpha = 0.3f)
-                                                    Shape.Arrow -> drawArrow(action.center, action.size, alpha = 0.3f)
+                                                    Shape.Square -> drawSquare(action.center, action.size, Color(action.color).copy(alpha = 0.3f))
+                                                    Shape.Circle -> drawCircle(action.center, action.size, Color(action.color).copy(alpha = 0.3f))
+                                                    Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color).copy(alpha = 0.3f))
+                                                    Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color).copy(alpha = 0.3f))
                                                 }
                                             }
                                         }
@@ -526,10 +526,10 @@ fun MainScreen(
                                         }
                                         is DrawAction.DrawShape -> {
                                             when (action.shape) {
-                                                Shape.Square -> drawSquare(action.center, action.size, alpha = 1f)
-                                                Shape.Circle -> drawCircle(action.center, action.size, alpha = 1f)
-                                                Shape.Triangle -> drawTriangle(action.center, action.size, alpha = 1f)
-                                                Shape.Arrow -> drawArrow(action.center, action.size, alpha = 1f)
+                                                Shape.Square -> drawSquare(action.center, action.size, Color(action.color))
+                                                Shape.Circle -> drawCircle(action.center, action.size, Color(action.color))
+                                                Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color))
+                                                Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color))
                                             }
                                         }
                                     }

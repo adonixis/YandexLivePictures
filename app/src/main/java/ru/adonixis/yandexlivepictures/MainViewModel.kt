@@ -161,7 +161,7 @@ class MainViewModel : ViewModel() {
                 _state.update { currentState ->
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
                     val newHistory = currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).toMutableList()
-                    newHistory.add(DrawAction.DrawShape(action.shape, action.center, action.size))
+                    newHistory.add(DrawAction.DrawShape(action.shape, action.center, action.size, currentState.selectedColor))
                     
                     val updatedFrame = currentFrame.copy(
                         actionHistory = newHistory,
@@ -232,7 +232,7 @@ sealed interface MainAction {
 sealed interface DrawAction {
     data class DrawPath(val path: List<Offset>, val color: Int) : DrawAction
     data class ErasePath(val path: List<Offset>) : DrawAction
-    data class DrawShape(val shape: Shape, val center: Offset, val size: Float) : DrawAction
+    data class DrawShape(val shape: Shape, val center: Offset, val size: Float, val color: Int) : DrawAction
 }
 
 sealed interface Shape {
