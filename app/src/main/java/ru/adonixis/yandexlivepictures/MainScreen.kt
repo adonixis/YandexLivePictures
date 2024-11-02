@@ -47,6 +47,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -60,6 +62,9 @@ import ru.adonixis.yandexlivepictures.theme.White
 import kotlin.math.min
 import androidx.compose.ui.graphics.toArgb
 import kotlin.math.ceil
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.ui.graphics.PathEffect
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -364,6 +369,7 @@ fun MainScreen(
                                                         path = mutableListOf(position)
                                                         currentEraserPath.clear()
                                                         currentEraserPath.addAll(path)
+                                                        viewModel.onAction(MainAction.ToggleEraserWidthSlider)
                                                     }
 
                                                     PointerEventType.Move -> {
@@ -423,7 +429,7 @@ fun MainScreen(
                                                 path = Path().apply { drawSmoothLine(action.path) },
                                                 color = Color.Transparent,
                                                 style = Stroke(
-                                                    width = 10.dp.toPx(),
+                                                    width = action.width.dp.toPx(),
                                                     cap = StrokeCap.Round,
                                                     join = StrokeJoin.Round
                                                 ),
@@ -466,7 +472,7 @@ fun MainScreen(
                                                     path = Path().apply { drawSmoothLine(action.path) },
                                                     color = Color.Transparent,
                                                     style = Stroke(
-                                                        width = 10.dp.toPx(),
+                                                        width = action.width.dp.toPx(),
                                                         cap = StrokeCap.Round,
                                                         join = StrokeJoin.Round
                                                     ),
@@ -512,7 +518,7 @@ fun MainScreen(
                                                 path = Path().apply { drawSmoothLine(action.path) },
                                                 color = Color.Transparent,
                                                 style = Stroke(
-                                                    width = 10.dp.toPx(),
+                                                    width = action.width.dp.toPx(),
                                                     cap = StrokeCap.Round,
                                                     join = StrokeJoin.Round
                                                 ),
@@ -548,11 +554,22 @@ fun MainScreen(
                                     path = Path().apply { drawSmoothLine(currentEraserPath) },
                                     color = Color.Transparent,
                                     style = Stroke(
-                                        width = 10.dp.toPx(),
+                                        width = state.eraserWidth.dp.toPx(),
                                         cap = StrokeCap.Round,
                                         join = StrokeJoin.Round
                                     ),
                                     blendMode = BlendMode.Clear
+                                )
+                                
+                                // Добавляем индикатор размера ластика
+                                drawCircle(
+                                    color = Black.copy(alpha = 0.5f),
+                                    radius = state.eraserWidth.dp.toPx() / 2,
+                                    center = currentEraserPath.last(),
+                                    style = Stroke(
+                                        width = 1.dp.toPx(),
+                                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
+                                    )
                                 )
                             }
 
@@ -911,19 +928,59 @@ fun MainScreen(
                 )
             }
 
-            IconButton(
-                modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.ToggleEraserTool) },
-                enabled = !state.isPlaybackActive
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_erase_32),
-                    contentDescription = "Erase icon",
-                    tint = if (state.isEraserEnabled)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
+            Box {
+                IconButton(
+                    modifier = Modifier.size(36.dp),
+                    onClick = { viewModel.onAction(MainAction.ToggleEraserTool) },
+                    enabled = !state.isPlaybackActive
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_erase_32),
+                        contentDescription = "Erase icon",
+                        tint = if (state.isEraserEnabled)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                // Слайдер для толщины ластика
+                this@Row.AnimatedVisibility(
+                    visible = state.isEraserWidthSliderVisible,
+                    enter = fadeIn(animationSpec = tween(200)),
+                    exit = fadeOut(animationSpec = tween(200)),
+                    modifier = Modifier
+                        .width(200.dp)
+                        .align(Alignment.TopCenter)
+                        .offset(y = (-50).dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Slider(
+                            value = state.eraserWidth,
+                            onValueChange = {
+                                viewModel.onAction(MainAction.UpdateEraserWidth(it))
+                            },
+                            valueRange = 2f..30f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
+                                inactiveTrackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
+                }
             }
 
             IconButton(

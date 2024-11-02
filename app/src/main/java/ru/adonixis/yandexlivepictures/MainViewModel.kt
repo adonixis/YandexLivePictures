@@ -30,6 +30,7 @@ class MainViewModel : ViewModel() {
             MainAction.ToggleEraserTool -> {
                 _state.update { it.copy(
                     isEraserEnabled = !it.isEraserEnabled,
+                    isEraserWidthSliderVisible = !it.isEraserEnabled,
                     isPencilEnabled = false,
                     isShapesVisible = false,
                     isColorsVisible = false,
@@ -59,6 +60,16 @@ class MainViewModel : ViewModel() {
                     isExtendedColorsVisible = !it.isExtendedColorsVisible
                 ) }
             }
+            MainAction.ToggleEraserWidthSlider -> {
+                _state.update { it.copy(
+                    isEraserWidthSliderVisible = !it.isEraserWidthSliderVisible
+                ) }
+            }
+            is MainAction.UpdateEraserWidth -> {
+                _state.update { it.copy(
+                    eraserWidth = action.width
+                ) }
+            }
             is MainAction.AddDrawingPath -> {
                 _state.update { currentState ->
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
@@ -80,7 +91,7 @@ class MainViewModel : ViewModel() {
                 _state.update { currentState ->
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
                     val newHistory = currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).toMutableList()
-                    newHistory.add(DrawAction.ErasePath(action.path))
+                    newHistory.add(DrawAction.ErasePath(action.path, currentState.eraserWidth))
                     
                     val updatedFrame = currentFrame.copy(
                         actionHistory = newHistory,
@@ -211,7 +222,9 @@ data class MainState(
     val currentFrameIndex: Int = 0,
     val isPlaybackActive: Boolean = false,
     val playbackFrameIndex: Int = 0,
-    val selectedColor: Int = Black.toArgb()
+    val selectedColor: Int = Black.toArgb(),
+    val isEraserWidthSliderVisible: Boolean = false,
+    val eraserWidth: Float = 10f
 )
 
 data class Frame(
@@ -225,6 +238,8 @@ sealed interface MainAction {
     data object ToggleShapesPanel : MainAction
     data object ToggleColorsPanel : MainAction
     data object ToggleExtendedColorsPanel : MainAction
+    data object ToggleEraserWidthSlider : MainAction
+    data class UpdateEraserWidth(val width: Float) : MainAction
     data class AddDrawingPath(val path: List<Offset>) : MainAction
     data class AddEraserPath(val path: List<Offset>) : MainAction
     data class AddShape(val shape: Shape, val center: Offset, val size: Float) : MainAction
@@ -239,7 +254,7 @@ sealed interface MainAction {
 
 sealed interface DrawAction {
     data class DrawPath(val path: List<Offset>, val color: Int) : DrawAction
-    data class ErasePath(val path: List<Offset>) : DrawAction
+    data class ErasePath(val path: List<Offset>, val width: Float) : DrawAction
     data class DrawShape(val shape: Shape, val center: Offset, val size: Float, val color: Int) : DrawAction
 }
 
