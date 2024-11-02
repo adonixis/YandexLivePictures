@@ -50,6 +50,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -62,6 +63,8 @@ import ru.adonixis.yandexlivepictures.theme.Red
 import ru.adonixis.yandexlivepictures.theme.White
 import kotlin.math.min
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.luminance
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -309,7 +312,7 @@ fun MainScreen(
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
-                        .onSizeChanged { 
+                        .onSizeChanged {
                             canvasSize = it.toSize()
                         }
                         .pointerInput(state.isPencilEnabled, state.isEraserEnabled) {
@@ -1045,16 +1048,13 @@ fun MainScreen(
                     modifier = Modifier
                         .size(28.dp)
                         .background(color = Color(state.selectedColor), shape = CircleShape)
-                        .then(
-                            if (state.isColorsVisible) {
-                                Modifier.border(
-                                    width = 1.5.dp,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = CircleShape
-                                )
-                            } else {
-                                Modifier
-                            }
+                        .border(
+                            width = 1.5.dp,
+                            color = if (state.isColorsVisible)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onBackground,
+                            shape = CircleShape
                         ),
                 )
             }
