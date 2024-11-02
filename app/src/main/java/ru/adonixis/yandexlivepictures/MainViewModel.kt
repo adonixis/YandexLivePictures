@@ -24,7 +24,8 @@ class MainViewModel : ViewModel() {
                     isEraserEnabled = false,
                     isShapesVisible = false,
                     isColorsVisible = false,
-                    isExtendedColorsVisible = false
+                    isExtendedColorsVisible = false,
+                    isEraserWidthSliderVisible = false
                 ) }
             }
             MainAction.ToggleEraserTool -> {
@@ -43,7 +44,8 @@ class MainViewModel : ViewModel() {
                     isPencilEnabled = false,
                     isEraserEnabled = false,
                     isColorsVisible = false,
-                    isExtendedColorsVisible = false
+                    isExtendedColorsVisible = false,
+                    isEraserWidthSliderVisible = false
                 ) }
             }
             MainAction.ToggleColorsPanel -> {
@@ -52,7 +54,8 @@ class MainViewModel : ViewModel() {
                     isExtendedColorsVisible = false,
                     isPencilEnabled = false,
                     isEraserEnabled = false,
-                    isShapesVisible = false
+                    isShapesVisible = false,
+                    isEraserWidthSliderVisible = false
                 ) }
             }
             MainAction.ToggleExtendedColorsPanel -> {
