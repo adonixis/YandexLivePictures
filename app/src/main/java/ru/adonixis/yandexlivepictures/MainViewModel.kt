@@ -23,7 +23,8 @@ class MainViewModel : ViewModel() {
                     isPencilEnabled = !it.isPencilEnabled,
                     isEraserEnabled = false,
                     isShapesVisible = false,
-                    isColorsVisible = false
+                    isColorsVisible = false,
+                    isExtendedColorsVisible = false
                 ) }
             }
             MainAction.ToggleEraserTool -> {
@@ -31,7 +32,8 @@ class MainViewModel : ViewModel() {
                     isEraserEnabled = !it.isEraserEnabled,
                     isPencilEnabled = false,
                     isShapesVisible = false,
-                    isColorsVisible = false
+                    isColorsVisible = false,
+                    isExtendedColorsVisible = false
                 ) }
             }
             MainAction.ToggleShapesPanel -> {
@@ -39,7 +41,8 @@ class MainViewModel : ViewModel() {
                     isShapesVisible = !it.isShapesVisible,
                     isPencilEnabled = false,
                     isEraserEnabled = false,
-                    isColorsVisible = false
+                    isColorsVisible = false,
+                    isExtendedColorsVisible = false
                 ) }
             }
             MainAction.ToggleColorsPanel -> {
@@ -53,8 +56,7 @@ class MainViewModel : ViewModel() {
             }
             MainAction.ToggleExtendedColorsPanel -> {
                 _state.update { it.copy(
-                    isExtendedColorsVisible = !it.isExtendedColorsVisible,
-                    isColorsVisible = true
+                    isExtendedColorsVisible = !it.isExtendedColorsVisible
                 ) }
             }
             is MainAction.AddDrawingPath -> {
