@@ -369,7 +369,7 @@ fun MainScreen(
                                                         path = mutableListOf(position)
                                                         currentEraserPath.clear()
                                                         currentEraserPath.addAll(path)
-                                                        viewModel.onAction(MainAction.ToggleEraserWidthSlider)
+                                                        viewModel.onAction(MainAction.HideEraserWidthSlider)
                                                     }
 
                                                     PointerEventType.Move -> {
@@ -723,7 +723,8 @@ fun MainScreen(
                                         modifier = Modifier.size(32.dp),
                                         onClick = {
                                             viewModel.onAction(MainAction.SelectColor(color.toArgb()))
-                                            viewModel.onAction(MainAction.ToggleColorsPanel)
+                                            viewModel.onAction(MainAction.HideColorsPanel)
+                                            viewModel.onAction(MainAction.EnablePencilTool)
                                         }
                                     ) {
                                         Box(
@@ -793,7 +794,8 @@ fun MainScreen(
                             modifier = Modifier.size(32.dp),
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(White.toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
+                                viewModel.onAction(MainAction.HideColorsPanel)
+                                viewModel.onAction(MainAction.EnablePencilTool)
                             }
                         ) {
                             Box(
@@ -818,7 +820,8 @@ fun MainScreen(
                             modifier = Modifier.size(32.dp),
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Red.toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
+                                viewModel.onAction(MainAction.HideColorsPanel)
+                                viewModel.onAction(MainAction.EnablePencilTool)
                             }
                         ) {
                             Box(
@@ -843,7 +846,8 @@ fun MainScreen(
                             modifier = Modifier.size(32.dp),
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Black.toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
+                                viewModel.onAction(MainAction.HideColorsPanel)
+                                viewModel.onAction(MainAction.EnablePencilTool)
                             }
                         ) {
                             Box(
@@ -868,7 +872,8 @@ fun MainScreen(
                             modifier = Modifier.size(32.dp),
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Blue.toArgb()))
-                                viewModel.onAction(MainAction.ToggleColorsPanel)
+                                viewModel.onAction(MainAction.HideColorsPanel)
+                                viewModel.onAction(MainAction.EnablePencilTool)
                             }
                         ) {
                             Box(
@@ -941,7 +946,7 @@ fun MainScreen(
         ) {
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.TogglePencilTool) },
+                onClick = { viewModel.onAction(MainAction.EnablePencilTool) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
@@ -967,7 +972,7 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.ToggleEraserTool) },
+                onClick = { viewModel.onAction(MainAction.EnableEraserTool) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
@@ -982,7 +987,7 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.ToggleShapesPanel) },
+                onClick = { viewModel.onAction(MainAction.ShowShapesPanel) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
@@ -997,7 +1002,7 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.ToggleColorsPanel) },
+                onClick = { viewModel.onAction(MainAction.ShowColorsPanel) },
                 enabled = !state.isPlaybackActive
             ) {
                 Box(

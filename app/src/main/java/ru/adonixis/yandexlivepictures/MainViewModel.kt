@@ -18,9 +18,9 @@ class MainViewModel : ViewModel() {
 
     fun onAction(action: MainAction) {
         when (action) {
-            MainAction.TogglePencilTool -> {
+            MainAction.EnablePencilTool -> {
                 _state.update { it.copy(
-                    isPencilEnabled = !it.isPencilEnabled,
+                    isPencilEnabled = true,
                     isEraserEnabled = false,
                     isShapesVisible = false,
                     isColorsVisible = false,
@@ -28,19 +28,19 @@ class MainViewModel : ViewModel() {
                     isEraserWidthSliderVisible = false
                 ) }
             }
-            MainAction.ToggleEraserTool -> {
+            MainAction.EnableEraserTool -> {
                 _state.update { it.copy(
-                    isEraserEnabled = !it.isEraserEnabled,
-                    isEraserWidthSliderVisible = !it.isEraserEnabled,
+                    isEraserEnabled = true,
+                    isEraserWidthSliderVisible = true,
                     isPencilEnabled = false,
                     isShapesVisible = false,
                     isColorsVisible = false,
                     isExtendedColorsVisible = false
                 ) }
             }
-            MainAction.ToggleShapesPanel -> {
+            MainAction.ShowShapesPanel -> {
                 _state.update { it.copy(
-                    isShapesVisible = !it.isShapesVisible,
+                    isShapesVisible = true,
                     isPencilEnabled = false,
                     isEraserEnabled = false,
                     isColorsVisible = false,
@@ -48,14 +48,20 @@ class MainViewModel : ViewModel() {
                     isEraserWidthSliderVisible = false
                 ) }
             }
-            MainAction.ToggleColorsPanel -> {
+            MainAction.ShowColorsPanel -> {
                 _state.update { it.copy(
-                    isColorsVisible = !it.isColorsVisible,
+                    isColorsVisible = true,
                     isExtendedColorsVisible = false,
                     isPencilEnabled = false,
                     isEraserEnabled = false,
                     isShapesVisible = false,
                     isEraserWidthSliderVisible = false
+                ) }
+            }
+            MainAction.HideColorsPanel -> {
+                _state.update { it.copy(
+                    isColorsVisible = false,
+                    isExtendedColorsVisible = false
                 ) }
             }
             MainAction.ToggleExtendedColorsPanel -> {
@@ -63,9 +69,9 @@ class MainViewModel : ViewModel() {
                     isExtendedColorsVisible = !it.isExtendedColorsVisible
                 ) }
             }
-            MainAction.ToggleEraserWidthSlider -> {
+            MainAction.HideEraserWidthSlider -> {
                 _state.update { it.copy(
-                    isEraserWidthSliderVisible = !it.isEraserWidthSliderVisible
+                    isEraserWidthSliderVisible = false
                 ) }
             }
             is MainAction.UpdateEraserWidth -> {
@@ -216,7 +222,7 @@ class MainViewModel : ViewModel() {
 }
 
 data class MainState(
-    val isPencilEnabled: Boolean = false,
+    val isPencilEnabled: Boolean = true,
     val isEraserEnabled: Boolean = false,
     val isShapesVisible: Boolean = false,
     val isColorsVisible: Boolean = false,
@@ -236,12 +242,13 @@ data class Frame(
 )
 
 sealed interface MainAction {
-    data object TogglePencilTool : MainAction
-    data object ToggleEraserTool : MainAction
-    data object ToggleShapesPanel : MainAction
-    data object ToggleColorsPanel : MainAction
+    data object EnablePencilTool : MainAction
+    data object EnableEraserTool : MainAction
+    data object ShowShapesPanel : MainAction
+    data object ShowColorsPanel : MainAction
+    data object HideColorsPanel : MainAction
     data object ToggleExtendedColorsPanel : MainAction
-    data object ToggleEraserWidthSlider : MainAction
+    data object HideEraserWidthSlider : MainAction
     data class UpdateEraserWidth(val width: Float) : MainAction
     data class AddDrawingPath(val path: List<Offset>) : MainAction
     data class AddEraserPath(val path: List<Offset>) : MainAction
