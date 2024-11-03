@@ -288,17 +288,6 @@ fun MainScreen(
                         contentDescription = "Layers icon"
                     )
                 }
-
-                IconButton(
-                    modifier = Modifier.size(36.dp),
-                    onClick = { viewModel.onAction(MainAction.ShowGenerateFramesDialog) },
-                    enabled = !state.isPlaybackActive
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_dice_24),
-                        contentDescription = "Generate frames"
-                    )
-                }
             }
 
             // Правая группа кнопок (Play и Stop) - всегда видима
@@ -629,182 +618,18 @@ fun MainScreen(
                 }
             }
 
-            // Панель с фигурами
-            this@Column.AnimatedVisibility(
-                visible = state.currentTool == Tool.SHAPES,
-                enter = fadeIn(
-                    animationSpec = tween(durationMillis = 200)
-                ),
-                exit = fadeOut(
-                    animationSpec = tween(durationMillis = 200)
-                ),
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(bottom = 16.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFF555454).copy(alpha = 0.16f),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        modifier = Modifier.size(32.dp),
-                        onClick = {
-                            viewModel.onAction(
-                                MainAction.AddShape(
-                                    shape = Shape.Square,
-                                    center = Offset(canvasSize.width / 2, canvasSize.height / 2),
-                                    size = min(canvasSize.width, canvasSize.height) * 0.8f
-                                )
-                            )
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_square_24),
-                            contentDescription = "Square icon"
-                        )
-                    }
+            if (!state.isPlaybackActive) {
 
-                    IconButton(
-                        modifier = Modifier.size(32.dp),
-                        onClick = {
-                            viewModel.onAction(
-                                MainAction.AddShape(
-                                    shape = Shape.Circle,
-                                    center = Offset(canvasSize.width / 2, canvasSize.height / 2),
-                                    size = min(canvasSize.width, canvasSize.height) * 0.8f
-                                )
-                            )
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_circle_24),
-                            contentDescription = "Circle icon"
-                        )
-                    }
-
-                    IconButton(
-                        modifier = Modifier.size(32.dp),
-                        onClick = {
-                            viewModel.onAction(
-                                MainAction.AddShape(
-                                    shape = Shape.Triangle,
-                                    center = Offset(canvasSize.width / 2, canvasSize.height / 2),
-                                    size = min(canvasSize.width, canvasSize.height) * 0.8f
-                                )
-                            )
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_triangle_24),
-                            contentDescription = "Triangle icon"
-                        )
-                    }
-
-                    IconButton(
-                        modifier = Modifier.size(32.dp),
-                        onClick = {
-                            viewModel.onAction(
-                                MainAction.AddShape(
-                                    shape = Shape.Arrow,
-                                    center = Offset(canvasSize.width / 2, canvasSize.height / 2),
-                                    size = min(canvasSize.width, canvasSize.height) * 0.8f
-                                )
-                            )
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_up_24),
-                            contentDescription = "Arrow up icon"
-                        )
-                    }
-                }
-            }
-
-            Column(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Расширенная панель с цветами
-                AnimatedVisibility(
-                    visible = state.isExtendedColorsVisible,
+                // Панель с фигурами
+                this@Column.AnimatedVisibility(
+                    visible = state.currentTool == Tool.SHAPES,
                     enter = fadeIn(
                         animationSpec = tween(durationMillis = 200)
                     ),
                     exit = fadeOut(
                         animationSpec = tween(durationMillis = 200)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .background(
-                                color = Color(0xFF545559).copy(alpha = 0.10f),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = Color(0xFF555454).copy(alpha = 0.16f),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        val rows = ceil((Colors.extendedColors.size.toFloat() / 5.0f)).toInt()
-                        for (row in 0 until rows) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                for (col in 0..4) {
-                                    val color = Colors.extendedColors[row * 5 + col]
-                                    IconButton(
-                                        modifier = Modifier.size(32.dp),
-                                        onClick = {
-                                            viewModel.onAction(MainAction.SelectColor(color.toArgb()))
-                                        }
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(28.dp)
-                                                .background(color = color, shape = CircleShape)
-                                                .then(
-                                                    if (state.selectedColor == color.toArgb()) {
-                                                        Modifier.border(
-                                                            width = 1.5.dp,
-                                                            color = MaterialTheme.colorScheme.primary,
-                                                            shape = CircleShape
-                                                        )
-                                                    } else {
-                                                        Modifier
-                                                    }
-                                                ),
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Панель с цветами
-                AnimatedVisibility(
-                    visible = state.currentTool == Tool.COLORS,
-                    enter = fadeIn(
-                        animationSpec = tween(durationMillis = 200)
                     ),
-                    exit = fadeOut(
-                        animationSpec = tween(durationMillis = 200)
-                    )
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     Row(
                         modifier = Modifier
@@ -818,178 +643,355 @@ fun MainScreen(
                                 color = Color(0xFF555454).copy(alpha = 0.16f),
                                 shape = RoundedCornerShape(4.dp)
                             )
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(
                             modifier = Modifier.size(32.dp),
-                            onClick = { viewModel.onAction(MainAction.ToggleExtendedColorsPanel) }
+                            onClick = {
+                                viewModel.onAction(
+                                    MainAction.AddShape(
+                                        shape = Shape.Square,
+                                        center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                        size = min(canvasSize.width, canvasSize.height) * 0.8f
+                                    )
+                                )
+                            }
                         ) {
                             Icon(
-                                painter = painterResource(id = R.drawable.ic_color_palette_32),
-                                contentDescription = "Color palette icon",
-                                tint = if (state.isExtendedColorsVisible)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurface
+                                painter = painterResource(id = R.drawable.ic_square_24),
+                                contentDescription = "Square icon"
                             )
                         }
 
                         IconButton(
                             modifier = Modifier.size(32.dp),
                             onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Colors.White.toArgb()))
+                                viewModel.onAction(
+                                    MainAction.AddShape(
+                                        shape = Shape.Circle,
+                                        center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                        size = min(canvasSize.width, canvasSize.height) * 0.8f
+                                    )
+                                )
                             }
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Colors.White, shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Colors.White.toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
-                                        }
-                                    ),
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_circle_24),
+                                contentDescription = "Circle icon"
                             )
                         }
 
                         IconButton(
                             modifier = Modifier.size(32.dp),
                             onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Colors.Red.toArgb()))
+                                viewModel.onAction(
+                                    MainAction.AddShape(
+                                        shape = Shape.Triangle,
+                                        center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                        size = min(canvasSize.width, canvasSize.height) * 0.8f
+                                    )
+                                )
                             }
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Colors.Red, shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Colors.Red.toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
-                                        }
-                                    ),
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_triangle_24),
+                                contentDescription = "Triangle icon"
                             )
                         }
 
                         IconButton(
                             modifier = Modifier.size(32.dp),
                             onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Colors.Black.toArgb()))
+                                viewModel.onAction(
+                                    MainAction.AddShape(
+                                        shape = Shape.Arrow,
+                                        center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                        size = min(canvasSize.width, canvasSize.height) * 0.8f
+                                    )
+                                )
                             }
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Colors.Black, shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Colors.Black.toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
-                                        }
-                                    ),
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_arrow_up_24),
+                                contentDescription = "Arrow up icon"
                             )
                         }
 
                         IconButton(
                             modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Colors.Blue.toArgb()))
-                            }
+                            onClick = { viewModel.onAction(MainAction.ShowGenerateFramesDialog) }
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .background(color = Colors.Blue, shape = CircleShape)
-                                    .then(
-                                        if (state.selectedColor == Colors.Blue.toArgb()) {
-                                            Modifier.border(
-                                                width = 1.5.dp,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                shape = CircleShape
-                                            )
-                                        } else {
-                                            Modifier
-                                        }
-                                    ),
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_dice_24),
+                                contentDescription = "Generate frames"
                             )
                         }
                     }
                 }
-            }
 
-            // Панель со слайдером ластика
-            this@Column.AnimatedVisibility(
-                visible = state.isEraserWidthSliderVisible,
-                enter = fadeIn(animationSpec = tween(durationMillis = 200)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 200)),
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFF555454).copy(alpha = 0.16f),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(16.dp)
+                Column(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Slider(
-                        value = state.eraserWidth,
-                        onValueChange = { viewModel.onAction(MainAction.UpdateEraserWidth(it)) },
-                        valueRange = 2f..100f
-                    )
+                    // Расширенная панель с цветами
+                    AnimatedVisibility(
+                        visible = state.isExtendedColorsVisible,
+                        enter = fadeIn(
+                            animationSpec = tween(durationMillis = 200)
+                        ),
+                        exit = fadeOut(
+                            animationSpec = tween(durationMillis = 200)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .background(
+                                    color = Color(0xFF545559).copy(alpha = 0.10f),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFF555454).copy(alpha = 0.16f),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            val rows = ceil((Colors.extendedColors.size.toFloat() / 5.0f)).toInt()
+                            for (row in 0 until rows) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    for (col in 0..4) {
+                                        val color = Colors.extendedColors[row * 5 + col]
+                                        IconButton(
+                                            modifier = Modifier.size(32.dp),
+                                            onClick = {
+                                                viewModel.onAction(MainAction.SelectColor(color.toArgb()))
+                                            }
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                                    .background(color = color, shape = CircleShape)
+                                                    .then(
+                                                        if (state.selectedColor == color.toArgb()) {
+                                                            Modifier.border(
+                                                                width = 1.5.dp,
+                                                                color = MaterialTheme.colorScheme.primary,
+                                                                shape = CircleShape
+                                                            )
+                                                        } else {
+                                                            Modifier
+                                                        }
+                                                    ),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Панель с цветами
+                    AnimatedVisibility(
+                        visible = state.currentTool == Tool.COLORS,
+                        enter = fadeIn(
+                            animationSpec = tween(durationMillis = 200)
+                        ),
+                        exit = fadeOut(
+                            animationSpec = tween(durationMillis = 200)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(bottom = 16.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Color(0xFF555454).copy(alpha = 0.16f),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                modifier = Modifier.size(32.dp),
+                                onClick = { viewModel.onAction(MainAction.ToggleExtendedColorsPanel) }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_color_palette_32),
+                                    contentDescription = "Color palette icon",
+                                    tint = if (state.isExtendedColorsVisible)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            IconButton(
+                                modifier = Modifier.size(32.dp),
+                                onClick = {
+                                    viewModel.onAction(MainAction.SelectColor(Colors.White.toArgb()))
+                                }
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(color = Colors.White, shape = CircleShape)
+                                        .then(
+                                            if (state.selectedColor == Colors.White.toArgb()) {
+                                                Modifier.border(
+                                                    width = 1.5.dp,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    shape = CircleShape
+                                                )
+                                            } else {
+                                                Modifier
+                                            }
+                                        ),
+                                )
+                            }
+
+                            IconButton(
+                                modifier = Modifier.size(32.dp),
+                                onClick = {
+                                    viewModel.onAction(MainAction.SelectColor(Colors.Red.toArgb()))
+                                }
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(color = Colors.Red, shape = CircleShape)
+                                        .then(
+                                            if (state.selectedColor == Colors.Red.toArgb()) {
+                                                Modifier.border(
+                                                    width = 1.5.dp,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    shape = CircleShape
+                                                )
+                                            } else {
+                                                Modifier
+                                            }
+                                        ),
+                                )
+                            }
+
+                            IconButton(
+                                modifier = Modifier.size(32.dp),
+                                onClick = {
+                                    viewModel.onAction(MainAction.SelectColor(Colors.Black.toArgb()))
+                                }
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(color = Colors.Black, shape = CircleShape)
+                                        .then(
+                                            if (state.selectedColor == Colors.Black.toArgb()) {
+                                                Modifier.border(
+                                                    width = 1.5.dp,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    shape = CircleShape
+                                                )
+                                            } else {
+                                                Modifier
+                                            }
+                                        ),
+                                )
+                            }
+
+                            IconButton(
+                                modifier = Modifier.size(32.dp),
+                                onClick = {
+                                    viewModel.onAction(MainAction.SelectColor(Colors.Blue.toArgb()))
+                                }
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(color = Colors.Blue, shape = CircleShape)
+                                        .then(
+                                            if (state.selectedColor == Colors.Blue.toArgb()) {
+                                                Modifier.border(
+                                                    width = 1.5.dp,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    shape = CircleShape
+                                                )
+                                            } else {
+                                                Modifier
+                                            }
+                                        ),
+                                )
+                            }
+                        }
+                    }
                 }
-            }
 
-            // Панель со слайдером ластика
-            this@Column.AnimatedVisibility(
-                visible = state.isBrushWidthSliderVisible,
-                enter = fadeIn(animationSpec = tween(durationMillis = 200)),
-                exit = fadeOut(animationSpec = tween(durationMillis = 200)),
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = Color(0xFF555454).copy(alpha = 0.16f),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(16.dp)
+                // Панель со слайдером ластика
+                this@Column.AnimatedVisibility(
+                    visible = state.isEraserWidthSliderVisible,
+                    enter = fadeIn(animationSpec = tween(durationMillis = 200)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = 200)),
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
-                    Slider(
-                        value = state.brushWidth,
-                        onValueChange = { viewModel.onAction(MainAction.UpdateBrushWidth(it)) },
-                        valueRange = 2f..100f
-                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFF555454).copy(alpha = 0.16f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(16.dp)
+                    ) {
+                        Slider(
+                            value = state.eraserWidth,
+                            onValueChange = { viewModel.onAction(MainAction.UpdateEraserWidth(it)) },
+                            valueRange = 2f..100f
+                        )
+                    }
+                }
+
+                // Панель со слайдером ластика
+                this@Column.AnimatedVisibility(
+                    visible = state.isBrushWidthSliderVisible,
+                    enter = fadeIn(animationSpec = tween(durationMillis = 200)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = 200)),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFF555454).copy(alpha = 0.16f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(16.dp)
+                    ) {
+                        Slider(
+                            value = state.brushWidth,
+                            onValueChange = { viewModel.onAction(MainAction.UpdateBrushWidth(it)) },
+                            valueRange = 2f..100f
+                        )
+                    }
                 }
             }
         }
