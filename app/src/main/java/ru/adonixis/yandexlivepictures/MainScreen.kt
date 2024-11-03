@@ -27,10 +27,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -47,8 +49,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -70,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.adonixis.yandexlivepictures.theme.Black
+import ru.adonixis.yandexlivepictures.theme.White
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import kotlin.math.ceil
 import kotlin.math.min
@@ -151,7 +156,88 @@ private fun DrawScope.drawArrow(center: Offset, size: Float, color: Color) {
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SliderThumb() {
+    Box(
+        modifier = Modifier
+            .size(20.dp)
+            .background(White, CircleShape)
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SliderTrack(
+    modifier: Modifier = Modifier
+) {
+    val gradientBrush = Brush.horizontalGradient(
+        colors = listOf(
+            Color(0xFF9CCB0C),
+            Color(0xFFEAFFAB)
+        )
+    )
+    
+    Canvas(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(12.dp)
+    ) {
+        val sliderWidth = size.width
+        val centerY = size.height / 2
+        
+        val path = Path().apply {
+            arcTo(
+                rect = Rect(
+                    left = 0f,
+                    top = centerY - 6.dp.toPx(),
+                    right = 12.dp.toPx(),
+                    bottom = centerY + 6.dp.toPx()
+                ),
+                startAngleDegrees = 90f,
+                sweepAngleDegrees = 180f,
+                forceMoveTo = true
+            )
+            
+            val startY = centerY - 6.dp.toPx()
+            val endY = centerY - 2.dp.toPx()
+            
+            quadraticTo(
+                x1 = sliderWidth / 2,
+                y1 = startY,
+                x2 = sliderWidth - 4.dp.toPx(),
+                y2 = endY
+            )
+            
+            arcTo(
+                rect = Rect(
+                    left = sliderWidth - 4.dp.toPx(),
+                    top = centerY - 2.dp.toPx(),
+                    right = sliderWidth,
+                    bottom = centerY + 2.dp.toPx()
+                ),
+                startAngleDegrees = 270f,
+                sweepAngleDegrees = 180f,
+                forceMoveTo = false
+            )
+            
+            quadraticTo(
+                x1 = sliderWidth / 2,
+                y1 = centerY + 2.dp.toPx(),
+                x2 = 6.dp.toPx(),
+                y2 = centerY + 6.dp.toPx()
+            )
+            
+            close()
+        }
+        
+        drawPath(
+            path = path,
+            brush = gradientBrush
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
@@ -1078,7 +1164,9 @@ fun MainScreen(
                         Slider(
                             value = state.eraserWidth,
                             onValueChange = { viewModel.onAction(MainAction.UpdateEraserWidth(it)) },
-                            valueRange = 2f..100f
+                            valueRange = 2f..100f,
+                            thumb = { SliderThumb() },
+                            track = { SliderTrack() }
                         )
                     }
                 }
@@ -1107,7 +1195,9 @@ fun MainScreen(
                         Slider(
                             value = state.brushWidth,
                             onValueChange = { viewModel.onAction(MainAction.UpdateBrushWidth(it)) },
-                            valueRange = 2f..100f
+                            valueRange = 2f..100f,
+                            thumb = { SliderThumb() },
+                            track = { SliderTrack() }
                         )
                     }
                 }
