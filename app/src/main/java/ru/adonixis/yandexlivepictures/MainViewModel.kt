@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.net.Uri
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.toArgb
@@ -26,6 +27,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import android.widget.Toast
+import androidx.core.content.FileProvider.getUriForFile
 
 class MainViewModel : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -333,7 +336,7 @@ class MainViewModel : ViewModel() {
     private fun saveAsGif(context: Context) {
         viewModelScope.launch(Dispatchers.Default) {
             try {
-                _state.update { it.copy(isSavingGif = true) }
+                _state.update { it.copy(isSavingGif = true, gifSavingResult = null) }
                 
                 val cacheDir = context.cacheDir
                 val framesDir = File(cacheDir, "frames").apply { mkdirs() }
@@ -477,15 +480,26 @@ class MainViewModel : ViewModel() {
                     encoder.finish()
                     
                     framesDir.deleteRecursively()
+                    
+                    val uri = getUriForFile(
+                        context,
+                        "${context.packageName}.provider",
+                        gifFile
+                    )
+                    
+                    withContext(Dispatchers.Main) {
+                        _state.update { it.copy(
+                            isSavingGif = false,
+                            gifSavingResult = GifSavingResult.Success(uri)
+                        ) }
+                    }
                 }
-                
-                withContext(Dispatchers.Main) {
-                    _state.update { it.copy(isSavingGif = false) }
-                }
-                
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    _state.update { it.copy(isSavingGif = false) }
+                    _state.update { it.copy(
+                        isSavingGif = false,
+                        gifSavingResult = GifSavingResult.Error(e.localizedMessage ?: "Unknown error")
+                    ) }
                 }
             }
         }
@@ -516,7 +530,8 @@ data class MainState(
     val isDuplicateFrameDialogVisible: Boolean = false,
     val isPlaybackSpeedDialogVisible: Boolean = false,
     val playbackFps: Int = 5,
-    val isSavingGif: Boolean = false
+    val isSavingGif: Boolean = false,
+    val gifSavingResult: GifSavingResult? = null
 )
 
 data class Frame(
@@ -572,4 +587,9 @@ sealed interface Shape {
 
 enum class Tool {
     PENCIL, BRUSH, ERASER, SHAPES, COLORS
+}
+
+sealed interface GifSavingResult {
+    data class Success(val uri: Uri) : GifSavingResult
+    data class Error(val message: String) : GifSavingResult
 }

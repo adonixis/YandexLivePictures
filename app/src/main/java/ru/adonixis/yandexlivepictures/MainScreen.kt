@@ -1,5 +1,7 @@
 package ru.adonixis.yandexlivepictures
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -33,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -161,6 +164,28 @@ fun MainScreen(
     var frameCount by remember { mutableStateOf("10") }
     var playbackSpeed by remember { mutableStateOf("5") }
     val context = LocalContext.current
+
+    LaunchedEffect(state.gifSavingResult) {
+        state.gifSavingResult?.let { result ->
+            when (result) {
+                is GifSavingResult.Success -> {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "image/gif"
+                        putExtra(Intent.EXTRA_STREAM, result.uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share GIF"))
+                }
+                is GifSavingResult.Error -> {
+                    Toast.makeText(
+                        context,
+                        "Ошибка при сохранении GIF: ${result.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
 
     if (state.isGenerateFramesDialogVisible) {
         AlertDialog(
