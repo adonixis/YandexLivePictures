@@ -32,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -837,6 +836,7 @@ fun MainScreen(
                     Row(
                         modifier = Modifier
                             .padding(bottom = 16.dp)
+                            .clickable(enabled = false) { }
                             .background(
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(4.dp)
@@ -935,7 +935,9 @@ fun MainScreen(
                 }
 
                 Column(
-                    modifier = Modifier.align(Alignment.BottomCenter),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .clickable(enabled = false) { },
                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -1149,6 +1151,7 @@ fun MainScreen(
                     Box(
                         modifier = Modifier
                             .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
+                            .clickable(enabled = false) { }
                             .background(
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(4.dp)
@@ -1171,7 +1174,7 @@ fun MainScreen(
                     }
                 }
 
-                // Панель со слайдером ластика
+                // Панель со слайдером кисти
                 this@Column.AnimatedVisibility(
                     visible = state.isBrushWidthSliderVisible,
                     enter = fadeIn(animationSpec = tween(durationMillis = 200)),
@@ -1181,6 +1184,7 @@ fun MainScreen(
                     Box(
                         modifier = Modifier
                             .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
+                            .clickable(enabled = false) { }
                             .background(
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(4.dp)
