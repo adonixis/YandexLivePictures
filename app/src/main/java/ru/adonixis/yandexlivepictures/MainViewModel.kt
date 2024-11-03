@@ -1,16 +1,31 @@
 package ru.adonixis.yandexlivepictures
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Path
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.gifencoder.AnimatedGifEncoder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 class MainViewModel : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -299,6 +314,7 @@ class MainViewModel : ViewModel() {
                 ) }
                 startPlayback()
             }
+            is MainAction.SaveAsGif -> saveAsGif(action.context)
         }
     }
 
@@ -312,6 +328,172 @@ class MainViewModel : ViewModel() {
                 }
             }
         }
+    }
+
+    private fun saveAsGif(context: Context) {
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                _state.update { it.copy(isSavingGif = true) }
+                
+                val cacheDir = context.cacheDir
+                val framesDir = File(cacheDir, "frames").apply { mkdirs() }
+                
+                val backgroundBitmap = withContext(Dispatchers.IO) {
+                    BitmapFactory.decodeResource(
+                        context.resources,
+                        R.drawable.bg_paper
+                    )
+                }
+                
+                val framePaths = coroutineScope {
+                    state.value.frames.mapIndexed { index, frame ->
+                        async {
+                            val bitmap = Bitmap.createBitmap(
+                                state.value.canvasSize.width.toInt(),
+                                state.value.canvasSize.height.toInt(),
+                                Bitmap.Config.ARGB_8888
+                            )
+                            val canvas = Canvas(bitmap)
+                            
+                            val scaledBackground = Bitmap.createScaledBitmap(
+                                backgroundBitmap,
+                                bitmap.width,
+                                bitmap.height,
+                                true
+                            )
+                            canvas.drawBitmap(scaledBackground, 0f, 0f, null)
+                            scaledBackground.recycle()
+                            
+                            frame.actionHistory.take(frame.currentHistoryPosition + 1).forEach { action ->
+                                when (action) {
+                                    is DrawAction.DrawPath -> {
+                                        val paint = Paint().apply {
+                                            color = action.color
+                                            strokeWidth = action.width
+                                            style = Paint.Style.STROKE
+                                            strokeCap = Paint.Cap.ROUND
+                                            strokeJoin = Paint.Join.ROUND
+                                        }
+                                        val path = Path()
+                                        action.path.forEachIndexed { i, offset ->
+                                            if (i == 0) path.moveTo(offset.x, offset.y)
+                                            else path.lineTo(offset.x, offset.y)
+                                        }
+                                        canvas.drawPath(path, paint)
+                                    }
+                                    is DrawAction.ErasePath -> {
+                                        val paint = Paint().apply {
+                                            strokeWidth = action.width
+                                            style = Paint.Style.STROKE
+                                            strokeCap = Paint.Cap.ROUND
+                                            strokeJoin = Paint.Join.ROUND
+                                            xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+                                        }
+                                        val path = Path()
+                                        action.path.forEachIndexed { i, offset ->
+                                            if (i == 0) path.moveTo(offset.x, offset.y)
+                                            else path.lineTo(offset.x, offset.y)
+                                        }
+                                        canvas.drawPath(path, paint)
+                                    }
+                                    is DrawAction.DrawShape -> {
+                                        val paint = Paint().apply {
+                                            color = action.color
+                                            strokeWidth = 2f
+                                            style = Paint.Style.STROKE
+                                            strokeCap = Paint.Cap.ROUND
+                                            strokeJoin = Paint.Join.ROUND
+                                        }
+                                        when (action.shape) {
+                                            Shape.Square -> {
+                                                val path = Path().apply {
+                                                    moveTo(action.center.x - action.size/2, action.center.y - action.size/2)
+                                                    lineTo(action.center.x + action.size/2, action.center.y - action.size/2)
+                                                    lineTo(action.center.x + action.size/2, action.center.y + action.size/2)
+                                                    lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
+                                                    close()
+                                                }
+                                                canvas.drawPath(path, paint)
+                                            }
+                                            Shape.Circle -> {
+                                                canvas.drawCircle(
+                                                    action.center.x,
+                                                    action.center.y,
+                                                    action.size / 2,
+                                                    paint
+                                                )
+                                            }
+                                            Shape.Triangle -> {
+                                                val path = Path().apply {
+                                                    moveTo(action.center.x, action.center.y - action.size/2)
+                                                    lineTo(action.center.x + action.size/2, action.center.y + action.size/2)
+                                                    lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
+                                                    close()
+                                                }
+                                                canvas.drawPath(path, paint)
+                                            }
+                                            Shape.Arrow -> {
+                                                val path = Path().apply {
+                                                    moveTo(action.center.x, action.center.y - action.size/2)
+                                                    lineTo(action.center.x - action.size/3, action.center.y - action.size/6)
+                                                    moveTo(action.center.x, action.center.y - action.size/2)
+                                                    lineTo(action.center.x + action.size/3, action.center.y - action.size/6)
+                                                    moveTo(action.center.x, action.center.y - action.size/2)
+                                                    lineTo(action.center.x, action.center.y + action.size/2)
+                                                }
+                                                canvas.drawPath(path, paint)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            withContext(Dispatchers.IO) {
+                                val file = File(framesDir, "frame_$index.png")
+                                FileOutputStream(file).use { out ->
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 80, out)
+                                }
+                                bitmap.recycle()
+                                file.absolutePath
+                            }
+                        }
+                    }.awaitAll()
+                }
+                
+                backgroundBitmap.recycle()
+                
+                withContext(Dispatchers.IO) {
+                    val gifFile = File(context.getExternalFilesDir(null), "animation.gif")
+                    val encoder = AnimatedGifEncoder()
+                    encoder.start(gifFile.absolutePath)
+                    encoder.setDelay(1000 / state.value.playbackFps)
+                    encoder.setRepeat(0)
+                    
+                    framePaths.forEach { path ->
+                        val bitmap = BitmapFactory.decodeFile(path)
+                        encoder.addFrame(bitmap)
+                        bitmap.recycle()
+                    }
+                    encoder.finish()
+                    
+                    framesDir.deleteRecursively()
+                }
+                
+                withContext(Dispatchers.Main) {
+                    _state.update { it.copy(isSavingGif = false) }
+                }
+                
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    _state.update { it.copy(isSavingGif = false) }
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.coroutineContext.cancelChildren()
     }
 }
 
@@ -333,7 +515,8 @@ data class MainState(
     val isDeleteAllDialogVisible: Boolean = false,
     val isDuplicateFrameDialogVisible: Boolean = false,
     val isPlaybackSpeedDialogVisible: Boolean = false,
-    val playbackFps: Int = 5
+    val playbackFps: Int = 5,
+    val isSavingGif: Boolean = false
 )
 
 data class Frame(
@@ -371,6 +554,7 @@ sealed interface MainAction {
     data object ShowPlaybackSpeedDialog : MainAction
     data object HidePlaybackSpeedDialog : MainAction
     data class UpdatePlaybackSpeed(val fps: Int) : MainAction
+    data class SaveAsGif(val context: Context) : MainAction
 }
 
 sealed interface DrawAction {

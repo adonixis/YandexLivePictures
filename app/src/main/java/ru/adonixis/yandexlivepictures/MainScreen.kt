@@ -11,10 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,8 +23,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,17 +59,15 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
-import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.time.withTimeoutOrNull
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
-import java.time.Duration
 import kotlin.math.ceil
 import kotlin.math.min
 
@@ -166,6 +160,7 @@ fun MainScreen(
     var canvasSize by remember { mutableStateOf(Size.Zero) }
     var frameCount by remember { mutableStateOf("10") }
     var playbackSpeed by remember { mutableStateOf("5") }
+    val context = LocalContext.current
 
     if (state.isGenerateFramesDialogVisible) {
         AlertDialog(
@@ -315,13 +310,12 @@ fun MainScreen(
                         .size(36.dp)
                         .clip(CircleShape)
                         .combinedClickable(
+                            enabled = !state.isPlaybackActive,
                             onClick = {
-                                if (!state.isPlaybackActive)
-                                    viewModel.onAction(MainAction.DeleteCurrentFrame)
+                                viewModel.onAction(MainAction.DeleteCurrentFrame)
                             },
                             onLongClick = {
-                                if (!state.isPlaybackActive)
-                                    viewModel.onAction(MainAction.ShowDeleteAllDialog)
+                                viewModel.onAction(MainAction.ShowDeleteAllDialog)
                             }
                         ),
                     contentAlignment = Alignment.Center
@@ -337,13 +331,12 @@ fun MainScreen(
                         .size(36.dp)
                         .clip(CircleShape)
                         .combinedClickable(
+                            enabled = !state.isPlaybackActive,
                             onClick = {
-                                if (!state.isPlaybackActive)
-                                    viewModel.onAction(MainAction.AddNewFrame)
+                                viewModel.onAction(MainAction.AddNewFrame)
                             },
                             onLongClick = {
-                                if (!state.isPlaybackActive)
-                                    viewModel.onAction(MainAction.ShowDuplicateFrameDialog)
+                                viewModel.onAction(MainAction.ShowDuplicateFrameDialog)
                             }
                         ),
                     contentAlignment = Alignment.Center
@@ -391,13 +384,12 @@ fun MainScreen(
                         .size(36.dp)
                         .clip(CircleShape)
                         .combinedClickable(
-                            onClick = { 
-                                if (!state.isPlaybackActive)
-                                    viewModel.onAction(MainAction.StartPlayback)
+                            enabled = !state.isPlaybackActive,
+                            onClick = {
+                                viewModel.onAction(MainAction.StartPlayback)
                             },
                             onLongClick = {
-                                if (!state.isPlaybackActive)
-                                    viewModel.onAction(MainAction.ShowPlaybackSpeedDialog)
+                                viewModel.onAction(MainAction.ShowPlaybackSpeedDialog)
                             }
                         ),
                     contentAlignment = Alignment.Center
@@ -412,8 +404,18 @@ fun MainScreen(
                     )
                 }
             }
-        }
 
+            IconButton(
+                modifier = Modifier.size(36.dp),
+                onClick = { viewModel.onAction(MainAction.SaveAsGif(context)) },
+                enabled = !state.isPlaybackActive
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_save_32),
+                    contentDescription = "Save as GIF"
+                )
+            }
+        }
 
         Box(
             modifier = Modifier
@@ -1216,6 +1218,41 @@ fun MainScreen(
                 }
             }
         )
+    }
+
+    // Добавляем индикатор прогресса
+    if (state.isSavingGif) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+
+    if (state.isSavingGif) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(enabled = false) { }
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            awaitPointerEvent().changes.forEach { it.consume() }
+                        }
+                    }
+                }
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 
