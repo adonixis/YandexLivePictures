@@ -1,6 +1,7 @@
 package ru.adonixis.yandexlivepictures
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import ru.adonixis.yandexlivepictures.theme.Black
+import ru.adonixis.yandexlivepictures.theme.Blue
 
 class MainViewModel : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -198,6 +200,59 @@ class MainViewModel : ViewModel() {
                     currentState.copy(frames = newFrames)
                 }
             }
+            MainAction.ShowGenerateFramesDialog -> {
+                _state.update { it.copy(isGenerateFramesDialogVisible = true) }
+            }
+            MainAction.HideGenerateFramesDialog -> {
+                _state.update { it.copy(isGenerateFramesDialogVisible = false) }
+            }
+            is MainAction.GenerateBouncingBallFrames -> {
+                _state.update { currentState ->
+                    val newFrames = currentState.frames.toMutableList()
+                    
+                    var x = currentState.canvasSize.width / 2
+                    var y = currentState.canvasSize.height / 2
+                    var dx = 30f
+                    var dy = 20f
+                    val radius = minOf(currentState.canvasSize.width, currentState.canvasSize.height) * 0.1f
+                    
+                    repeat(action.count) {
+                        x += dx
+                        y += dy
+                        
+                        if (x - radius < 0 || x + radius > currentState.canvasSize.width) {
+                            dx = -dx
+                            x = x.coerceIn(radius, currentState.canvasSize.width - radius)
+                        }
+                        if (y - radius < 0 || y + radius > currentState.canvasSize.height) {
+                            dy = -dy
+                            y = y.coerceIn(radius, currentState.canvasSize.height - radius)
+                        }
+                        
+                        val frame = Frame(
+                            actionHistory = listOf(
+                                DrawAction.DrawShape(
+                                    shape = Shape.Circle,
+                                    center = Offset(x, y),
+                                    size = radius * 2,
+                                    color = currentState.selectedColor
+                                )
+                            ),
+                            currentHistoryPosition = 0
+                        )
+                        newFrames.add(frame)
+                    }
+                    
+                    currentState.copy(
+                        frames = newFrames,
+                        currentFrameIndex = newFrames.size - 1,
+                        isGenerateFramesDialogVisible = false
+                    )
+                }
+            }
+            is MainAction.UpdateCanvasSize -> {
+                _state.update { it.copy(canvasSize = action.size) }
+            }
         }
     }
 
@@ -227,6 +282,8 @@ data class MainState(
     val eraserWidth: Float = 20f,
     val isBrushWidthSliderVisible: Boolean = false,
     val brushWidth: Float = 20f,
+    val isGenerateFramesDialogVisible: Boolean = false,
+    val canvasSize: Size = Size.Zero
 )
 
 data class Frame(
@@ -251,6 +308,10 @@ sealed interface MainAction {
     data object StartPlayback : MainAction
     data object StopPlayback : MainAction
     data class SelectColor(val color: Int) : MainAction
+    data object ShowGenerateFramesDialog : MainAction
+    data object HideGenerateFramesDialog : MainAction
+    data class GenerateBouncingBallFrames(val count: Int) : MainAction
+    data class UpdateCanvasSize(val size: Size) : MainAction
 }
 
 sealed interface DrawAction {

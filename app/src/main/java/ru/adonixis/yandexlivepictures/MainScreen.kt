@@ -49,6 +49,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -65,6 +66,13 @@ import kotlin.math.ceil
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.core.text.isDigitsOnly
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -152,6 +160,46 @@ fun MainScreen(
     val currentPath = remember { mutableStateListOf<Offset>() }
     val currentEraserPath = remember { mutableStateListOf<Offset>() }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
+    var frameCount by remember { mutableStateOf("10") }
+
+    if (state.isGenerateFramesDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(MainAction.HideGenerateFramesDialog) },
+            title = { Text("Генерация кадров") },
+            text = {
+                TextField(
+                    value = frameCount,
+                    onValueChange = { text ->
+                        if (text.isEmpty()) {
+                            frameCount = ""
+                        } else if (text.toIntOrNull() !== null)
+                            frameCount = text
+                    },
+                    label = { Text("Количество кадров") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = frameCount.isDigitsOnly(),
+                    onClick = {
+                        frameCount.toIntOrNull()?.let {
+                            viewModel.onAction(MainAction.GenerateBouncingBallFrames(it))
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.onAction(MainAction.HideGenerateFramesDialog) }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -247,6 +295,17 @@ fun MainScreen(
                         contentDescription = "Layers icon"
                     )
                 }
+
+                IconButton(
+                    modifier = Modifier.size(36.dp),
+                    onClick = { viewModel.onAction(MainAction.ShowGenerateFramesDialog) },
+                    enabled = !state.isPlaybackActive
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_dice_24),
+                        contentDescription = "Generate frames"
+                    )
+                }
             }
 
             // Правая группа кнопок (Play и Stop) - всегда видима
@@ -309,8 +368,9 @@ fun MainScreen(
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
-                        .onSizeChanged {
+                        .onSizeChanged { 
                             canvasSize = it.toSize()
+                            viewModel.onAction(MainAction.UpdateCanvasSize(canvasSize))
                         }
                         .pointerInput(state.currentTool) {
                             if (!state.isPlaybackActive) {
