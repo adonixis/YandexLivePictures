@@ -767,7 +767,6 @@ fun MainScreen(
                                         onClick = {
                                             viewModel.onAction(MainAction.SelectColor(color.toArgb()))
                                             viewModel.onAction(MainAction.HideColorsPanel)
-                                            viewModel.onAction(MainAction.EnablePencilTool)
                                         }
                                     ) {
                                         Box(
@@ -838,7 +837,6 @@ fun MainScreen(
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(White.toArgb()))
                                 viewModel.onAction(MainAction.HideColorsPanel)
-                                viewModel.onAction(MainAction.EnablePencilTool)
                             }
                         ) {
                             Box(
@@ -864,7 +862,6 @@ fun MainScreen(
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Red.toArgb()))
                                 viewModel.onAction(MainAction.HideColorsPanel)
-                                viewModel.onAction(MainAction.EnablePencilTool)
                             }
                         ) {
                             Box(
@@ -890,7 +887,6 @@ fun MainScreen(
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Black.toArgb()))
                                 viewModel.onAction(MainAction.HideColorsPanel)
-                                viewModel.onAction(MainAction.EnablePencilTool)
                             }
                         ) {
                             Box(
@@ -916,7 +912,6 @@ fun MainScreen(
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Blue.toArgb()))
                                 viewModel.onAction(MainAction.HideColorsPanel)
-                                viewModel.onAction(MainAction.EnablePencilTool)
                             }
                         ) {
                             Box(

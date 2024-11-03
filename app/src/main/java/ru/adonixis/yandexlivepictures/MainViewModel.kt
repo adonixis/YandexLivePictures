@@ -67,16 +67,27 @@ class MainViewModel : ViewModel() {
                 ) }
             }
             MainAction.ShowColorsPanel -> {
-                _state.update { it.copy(
-                    isColorsVisible = true,
-                    isExtendedColorsVisible = false,
-                    isPencilEnabled = false,
-                    isBrushEnabled = false,
-                    isEraserEnabled = false,
-                    isShapesVisible = false,
-                    isEraserWidthSliderVisible = false,
-                    isBrushWidthSliderVisible = false
-                ) }
+                _state.update { currentState ->
+                    val previousTool = when {
+                        currentState.isPencilEnabled -> "pencil"
+                        currentState.isBrushEnabled -> "brush"
+                        currentState.isEraserEnabled -> "eraser"
+                        currentState.isShapesVisible -> "shapes"
+                        else -> "pencil"
+                    }
+                    
+                    currentState.copy(
+                        isColorsVisible = true,
+                        isExtendedColorsVisible = false,
+                        isPencilEnabled = false,
+                        isBrushEnabled = false,
+                        isEraserEnabled = false,
+                        isShapesVisible = false,
+                        isEraserWidthSliderVisible = false,
+                        isBrushWidthSliderVisible = false,
+                        previousTool = previousTool
+                    )
+                }
             }
             MainAction.HideColorsPanel -> {
                 _state.update { it.copy(
@@ -243,7 +254,65 @@ class MainViewModel : ViewModel() {
                 }
             }
             is MainAction.SelectColor -> {
-                _state.update { it.copy(selectedColor = action.color) }
+                _state.update { currentState ->
+                    when (currentState.previousTool) {
+                        "pencil" -> currentState.copy(
+                            selectedColor = action.color,
+                            isPencilEnabled = true,
+                            isBrushEnabled = false,
+                            isEraserEnabled = false,
+                            isShapesVisible = false,
+                            isColorsVisible = false,
+                            isExtendedColorsVisible = false,
+                            isEraserWidthSliderVisible = false,
+                            isBrushWidthSliderVisible = false
+                        )
+                        "brush" -> currentState.copy(
+                            selectedColor = action.color,
+                            isBrushEnabled = true,
+                            isBrushWidthSliderVisible = true,
+                            isPencilEnabled = false,
+                            isEraserEnabled = false,
+                            isShapesVisible = false,
+                            isColorsVisible = false,
+                            isExtendedColorsVisible = false,
+                            isEraserWidthSliderVisible = false
+                        )
+                        "eraser" -> currentState.copy(
+                            selectedColor = action.color,
+                            isEraserEnabled = true,
+                            isEraserWidthSliderVisible = true,
+                            isPencilEnabled = false,
+                            isBrushEnabled = false,
+                            isShapesVisible = false,
+                            isColorsVisible = false,
+                            isExtendedColorsVisible = false,
+                            isBrushWidthSliderVisible = false
+                        )
+                        "shapes" -> currentState.copy(
+                            selectedColor = action.color,
+                            isShapesVisible = true,
+                            isPencilEnabled = false,
+                            isBrushEnabled = false,
+                            isEraserEnabled = false,
+                            isColorsVisible = false,
+                            isExtendedColorsVisible = false,
+                            isEraserWidthSliderVisible = false,
+                            isBrushWidthSliderVisible = false
+                        )
+                        else -> currentState.copy(
+                            selectedColor = action.color,
+                            isPencilEnabled = true,
+                            isBrushEnabled = false,
+                            isEraserEnabled = false,
+                            isShapesVisible = false,
+                            isColorsVisible = false,
+                            isExtendedColorsVisible = false,
+                            isEraserWidthSliderVisible = false,
+                            isBrushWidthSliderVisible = false
+                        )
+                    }
+                }
             }
         }
     }
@@ -276,7 +345,8 @@ data class MainState(
     val isEraserWidthSliderVisible: Boolean = false,
     val eraserWidth: Float = 20f,
     val isBrushWidthSliderVisible: Boolean = false,
-    val brushWidth: Float = 20f
+    val brushWidth: Float = 20f,
+    val previousTool: String = "pencil"
 )
 
 data class Frame(
