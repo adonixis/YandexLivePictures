@@ -335,12 +335,12 @@ fun MainScreen(
                 IconButton(
                     modifier = Modifier.size(36.dp),
                     onClick = { viewModel.onAction(MainAction.StartPlayback) },
-                    enabled = !state.isPlaybackActive && state.frames.size > 1
+                    enabled = !state.isPlaybackActive
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_play_32),
                         contentDescription = "Start playback",
-                        tint = if (!state.isPlaybackActive && state.frames.size > 1)
+                        tint = if (!state.isPlaybackActive)
                             MaterialTheme.colorScheme.onSurface
                         else
                             MaterialTheme.colorScheme.onSurfaceVariant
