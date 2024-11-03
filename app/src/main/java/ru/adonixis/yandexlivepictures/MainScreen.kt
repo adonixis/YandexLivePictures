@@ -284,15 +284,25 @@ fun MainScreen(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_bin_32),
-                        contentDescription = "Delete current frame",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        contentDescription = "Delete current frame"
                     )
                 }
 
-                IconButton(
-                    modifier = Modifier.size(36.dp),
-                    onClick = { viewModel.onAction(MainAction.AddNewFrame) },
-                    enabled = !state.isPlaybackActive
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .combinedClickable(
+                            onClick = {
+                                if (!state.isPlaybackActive)
+                                    viewModel.onAction(MainAction.AddNewFrame)
+                            },
+                            onLongClick = {
+                                if (!state.isPlaybackActive)
+                                    viewModel.onAction(MainAction.ShowDuplicateFrameDialog)
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_file_plus_32),
@@ -1124,6 +1134,28 @@ fun MainScreen(
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.HideDeleteAllDialog) }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
+
+    if (state.isDuplicateFrameDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(MainAction.HideDuplicateFrameDialog) },
+            title = { Text("Дублирование кадра") },
+            text = { Text("Текущий кадр будет продублирован") },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.onAction(MainAction.DuplicateCurrentFrame) }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.onAction(MainAction.HideDuplicateFrameDialog) }
                 ) {
                     Text("Отмена")
                 }

@@ -266,6 +266,26 @@ class MainViewModel : ViewModel() {
                     )
                 }
             }
+            MainAction.ShowDuplicateFrameDialog -> {
+                _state.update { it.copy(isDuplicateFrameDialogVisible = true) }
+            }
+            MainAction.HideDuplicateFrameDialog -> {
+                _state.update { it.copy(isDuplicateFrameDialogVisible = false) }
+            }
+            MainAction.DuplicateCurrentFrame -> {
+                _state.update { currentState ->
+                    val currentFrame = currentState.frames[currentState.currentFrameIndex]
+                    val duplicatedFrame = currentFrame.copy()
+                    val newFrames = currentState.frames.toMutableList()
+                    newFrames.add(currentState.currentFrameIndex + 1, duplicatedFrame)
+                    
+                    currentState.copy(
+                        frames = newFrames,
+                        currentFrameIndex = currentState.currentFrameIndex + 1,
+                        isDuplicateFrameDialogVisible = false
+                    )
+                }
+            }
         }
     }
 
@@ -297,7 +317,8 @@ data class MainState(
     val brushWidth: Float = 20f,
     val isGenerateFramesDialogVisible: Boolean = false,
     val canvasSize: Size = Size.Zero,
-    val isDeleteAllDialogVisible: Boolean = false
+    val isDeleteAllDialogVisible: Boolean = false,
+    val isDuplicateFrameDialogVisible: Boolean = false
 )
 
 data class Frame(
@@ -329,6 +350,9 @@ sealed interface MainAction {
     data object ShowDeleteAllDialog : MainAction
     data object HideDeleteAllDialog : MainAction
     data object DeleteAllFrames : MainAction
+    data object ShowDuplicateFrameDialog : MainAction
+    data object HideDuplicateFrameDialog : MainAction
+    data object DuplicateCurrentFrame : MainAction
 }
 
 sealed interface DrawAction {
