@@ -165,6 +165,7 @@ fun MainScreen(
     val currentEraserPath = remember { mutableStateListOf<Offset>() }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
     var frameCount by remember { mutableStateOf("10") }
+    var playbackSpeed by remember { mutableStateOf("5") }
 
     if (state.isGenerateFramesDialogVisible) {
         AlertDialog(
@@ -176,8 +177,9 @@ fun MainScreen(
                     onValueChange = { text ->
                         if (text.isEmpty()) {
                             frameCount = ""
-                        } else if (text.toIntOrNull() !== null)
+                        } else if ((text.toIntOrNull() ?: 0) > 0) {
                             frameCount = text
+                        }
                     },
                     label = { Text("Количество кадров") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -185,10 +187,11 @@ fun MainScreen(
             },
             confirmButton = {
                 TextButton(
-                    enabled = frameCount.isDigitsOnly(),
+                    enabled = (frameCount.toIntOrNull() ?: 0) > 0,
                     onClick = {
                         frameCount.toIntOrNull()?.let {
-                            viewModel.onAction(MainAction.GenerateBouncingBallFrames(it))
+                            if (it > 0)
+                                viewModel.onAction(MainAction.GenerateBouncingBallFrames(it))
                         }
                     }
                 ) {
@@ -198,6 +201,47 @@ fun MainScreen(
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.HideGenerateFramesDialog) }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
+
+    if (state.isPlaybackSpeedDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) },
+            title = { Text("Скорость воспроизведения") },
+            text = {
+                TextField(
+                    value = playbackSpeed,
+                    onValueChange = { text ->
+                        if (text.isEmpty()) {
+                            playbackSpeed = ""
+                        } else if (((text.toIntOrNull() ?: 0) > 0) && ((text.toIntOrNull() ?: 0) <= 1000)) {
+                            playbackSpeed = text
+                        }
+                    },
+                    label = { Text("Кадров в секунду (от 0 до 1000)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = ((playbackSpeed.toIntOrNull() ?: 0) > 0) && ((playbackSpeed.toIntOrNull() ?: 0) <= 1000),
+                    onClick = {
+                        playbackSpeed.toIntOrNull()?.let {
+                            if (it in 1..1000)
+                                viewModel.onAction(MainAction.UpdatePlaybackSpeed(it))
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) }
                 ) {
                     Text("Отмена")
                 }
@@ -342,10 +386,21 @@ fun MainScreen(
                     )
                 }
 
-                IconButton(
-                    modifier = Modifier.size(36.dp),
-                    onClick = { viewModel.onAction(MainAction.StartPlayback) },
-                    enabled = !state.isPlaybackActive
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .combinedClickable(
+                            onClick = { 
+                                if (!state.isPlaybackActive)
+                                    viewModel.onAction(MainAction.StartPlayback)
+                            },
+                            onLongClick = {
+                                if (!state.isPlaybackActive)
+                                    viewModel.onAction(MainAction.ShowPlaybackSpeedDialog)
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_play_32),

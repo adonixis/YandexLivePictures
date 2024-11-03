@@ -286,13 +286,26 @@ class MainViewModel : ViewModel() {
                     )
                 }
             }
+            MainAction.ShowPlaybackSpeedDialog -> {
+                _state.update { it.copy(isPlaybackSpeedDialogVisible = true) }
+            }
+            MainAction.HidePlaybackSpeedDialog -> {
+                _state.update { it.copy(isPlaybackSpeedDialogVisible = false) }
+            }
+            is MainAction.UpdatePlaybackSpeed -> {
+                _state.update { it.copy(
+                    playbackFps = action.fps,
+                    isPlaybackSpeedDialogVisible = false
+                ) }
+                startPlayback()
+            }
         }
     }
 
     private fun startPlayback() {
         viewModelScope.launch {
             while (state.value.isPlaybackActive) {
-                delay(200) // 5 кадров в секунду
+                delay(1000L / state.value.playbackFps)
                 _state.update { currentState ->
                     val nextFrame = (currentState.playbackFrameIndex + 1) % currentState.frames.size
                     currentState.copy(playbackFrameIndex = nextFrame)
@@ -318,7 +331,9 @@ data class MainState(
     val isGenerateFramesDialogVisible: Boolean = false,
     val canvasSize: Size = Size.Zero,
     val isDeleteAllDialogVisible: Boolean = false,
-    val isDuplicateFrameDialogVisible: Boolean = false
+    val isDuplicateFrameDialogVisible: Boolean = false,
+    val isPlaybackSpeedDialogVisible: Boolean = false,
+    val playbackFps: Int = 5
 )
 
 data class Frame(
@@ -353,6 +368,9 @@ sealed interface MainAction {
     data object ShowDuplicateFrameDialog : MainAction
     data object HideDuplicateFrameDialog : MainAction
     data object DuplicateCurrentFrame : MainAction
+    data object ShowPlaybackSpeedDialog : MainAction
+    data object HidePlaybackSpeedDialog : MainAction
+    data class UpdatePlaybackSpeed(val fps: Int) : MainAction
 }
 
 sealed interface DrawAction {
