@@ -165,7 +165,6 @@ private fun SliderThumb() {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SliderTrack(
     modifier: Modifier = Modifier
@@ -189,31 +188,31 @@ private fun SliderTrack(
             arcTo(
                 rect = Rect(
                     left = 0f,
-                    top = centerY - 6.dp.toPx(),
-                    right = 12.dp.toPx(),
-                    bottom = centerY + 6.dp.toPx()
+                    top = centerY - 2.dp.toPx(),
+                    right = 4.dp.toPx(),
+                    bottom = centerY + 2.dp.toPx()
                 ),
                 startAngleDegrees = 90f,
                 sweepAngleDegrees = 180f,
                 forceMoveTo = true
             )
-            
-            val startY = centerY - 6.dp.toPx()
-            val endY = centerY - 2.dp.toPx()
+
+            val startY = centerY - 2.dp.toPx()
+            val endY = centerY - 6.dp.toPx()
             
             quadraticTo(
                 x1 = sliderWidth / 2,
                 y1 = startY,
-                x2 = sliderWidth - 4.dp.toPx(),
+                x2 = sliderWidth - 12.dp.toPx(),
                 y2 = endY
             )
-            
+
             arcTo(
                 rect = Rect(
-                    left = sliderWidth - 4.dp.toPx(),
-                    top = centerY - 2.dp.toPx(),
+                    left = sliderWidth - 12.dp.toPx(),
+                    top = centerY - 6.dp.toPx(),
                     right = sliderWidth,
-                    bottom = centerY + 2.dp.toPx()
+                    bottom = centerY + 6.dp.toPx()
                 ),
                 startAngleDegrees = 270f,
                 sweepAngleDegrees = 180f,
@@ -222,9 +221,9 @@ private fun SliderTrack(
             
             quadraticTo(
                 x1 = sliderWidth / 2,
-                y1 = centerY + 2.dp.toPx(),
-                x2 = 6.dp.toPx(),
-                y2 = centerY + 6.dp.toPx()
+                y1 = centerY + 6.dp.toPx(),
+                x2 = 2.dp.toPx(),
+                y2 = centerY + 2.dp.toPx()
             )
             
             close()
@@ -1162,6 +1161,7 @@ fun MainScreen(
                             .padding(16.dp)
                     ) {
                         Slider(
+                            modifier = Modifier.height(20.dp),
                             value = state.eraserWidth,
                             onValueChange = { viewModel.onAction(MainAction.UpdateEraserWidth(it)) },
                             valueRange = 2f..100f,
@@ -1193,6 +1193,7 @@ fun MainScreen(
                             .padding(16.dp)
                     ) {
                         Slider(
+                            modifier = Modifier.height(20.dp),
                             value = state.brushWidth,
                             onValueChange = { viewModel.onAction(MainAction.UpdateBrushWidth(it)) },
                             valueRange = 2f..100f,
