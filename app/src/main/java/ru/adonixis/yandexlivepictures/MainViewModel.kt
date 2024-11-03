@@ -18,82 +18,27 @@ class MainViewModel : ViewModel() {
 
     fun onAction(action: MainAction) {
         when (action) {
-            MainAction.EnablePencilTool -> {
-                _state.update { it.copy(
-                    isPencilEnabled = true,
-                    isBrushEnabled = false,
-                    isEraserEnabled = false,
-                    isShapesVisible = false,
-                    isColorsVisible = false,
-                    isExtendedColorsVisible = false,
-                    isEraserWidthSliderVisible = false,
-                    isBrushWidthSliderVisible = false
-                ) }
-            }
-            MainAction.EnableBrushTool -> {
-                _state.update { it.copy(
-                    isBrushEnabled = true,
-                    isBrushWidthSliderVisible = true,
-                    isPencilEnabled = false,
-                    isEraserEnabled = false,
-                    isShapesVisible = false,
-                    isColorsVisible = false,
-                    isExtendedColorsVisible = false,
-                    isEraserWidthSliderVisible = false
-                ) }
-            }
-            MainAction.EnableEraserTool -> {
-                _state.update { it.copy(
-                    isEraserEnabled = true,
-                    isEraserWidthSliderVisible = true,
-                    isPencilEnabled = false,
-                    isBrushEnabled = false,
-                    isShapesVisible = false,
-                    isColorsVisible = false,
-                    isExtendedColorsVisible = false,
-                    isBrushWidthSliderVisible = false
-                ) }
-            }
-            MainAction.ShowShapesPanel -> {
-                _state.update { it.copy(
-                    isShapesVisible = true,
-                    isPencilEnabled = false,
-                    isBrushEnabled = false,
-                    isEraserEnabled = false,
-                    isColorsVisible = false,
-                    isExtendedColorsVisible = false,
-                    isEraserWidthSliderVisible = false,
-                    isBrushWidthSliderVisible = false
-                ) }
-            }
-            MainAction.ShowColorsPanel -> {
+            is MainAction.SelectTool -> {
                 _state.update { currentState ->
-                    val previousTool = when {
-                        currentState.isPencilEnabled -> Tool.PENCIL
-                        currentState.isBrushEnabled -> Tool.BRUSH
-                        currentState.isEraserEnabled -> Tool.ERASER
-                        currentState.isShapesVisible -> Tool.SHAPES
-                        else -> Tool.PENCIL
-                    }
-                    
                     currentState.copy(
-                        isColorsVisible = true,
+                        currentTool = action.tool,
                         isExtendedColorsVisible = false,
-                        isPencilEnabled = false,
-                        isBrushEnabled = false,
-                        isEraserEnabled = false,
-                        isShapesVisible = false,
-                        isEraserWidthSliderVisible = false,
-                        isBrushWidthSliderVisible = false,
-                        previousTool = previousTool
+                        isEraserWidthSliderVisible = action.tool == Tool.ERASER,
+                        isBrushWidthSliderVisible = action.tool == Tool.BRUSH,
+                        previousTool = currentState.currentTool,
                     )
                 }
             }
-            MainAction.HideColorsPanel -> {
-                _state.update { it.copy(
-                    isColorsVisible = false,
-                    isExtendedColorsVisible = false
-                ) }
+            is MainAction.SelectColor -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        selectedColor = action.color,
+                        currentTool = currentState.previousTool,
+                        isExtendedColorsVisible = false,
+                        isEraserWidthSliderVisible = false,
+                        isBrushWidthSliderVisible = false
+                    )
+                }
             }
             MainAction.ToggleExtendedColorsPanel -> {
                 _state.update { it.copy(
@@ -125,7 +70,7 @@ class MainViewModel : ViewModel() {
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
                     val newHistory = currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).toMutableList()
                     
-                    val width = if (currentState.isPencilEnabled) 2f else currentState.brushWidth
+                    val width = if (currentState.currentTool == Tool.BRUSH) currentState.brushWidth else 2f
                     
                     newHistory.add(DrawAction.DrawPath(
                         path = action.path,
@@ -253,56 +198,6 @@ class MainViewModel : ViewModel() {
                     currentState.copy(frames = newFrames)
                 }
             }
-            is MainAction.SelectColor -> {
-                _state.update { currentState ->
-                    when (currentState.previousTool) {
-                        Tool.PENCIL -> currentState.copy(
-                            selectedColor = action.color,
-                            isPencilEnabled = true,
-                            isBrushEnabled = false,
-                            isEraserEnabled = false,
-                            isShapesVisible = false,
-                            isColorsVisible = false,
-                            isExtendedColorsVisible = false,
-                            isEraserWidthSliderVisible = false,
-                            isBrushWidthSliderVisible = false
-                        )
-                        Tool.BRUSH -> currentState.copy(
-                            selectedColor = action.color,
-                            isBrushEnabled = true,
-                            isBrushWidthSliderVisible = true,
-                            isPencilEnabled = false,
-                            isEraserEnabled = false,
-                            isShapesVisible = false,
-                            isColorsVisible = false,
-                            isExtendedColorsVisible = false,
-                            isEraserWidthSliderVisible = false
-                        )
-                        Tool.ERASER -> currentState.copy(
-                            selectedColor = action.color,
-                            isEraserEnabled = true,
-                            isEraserWidthSliderVisible = true,
-                            isPencilEnabled = false,
-                            isBrushEnabled = false,
-                            isShapesVisible = false,
-                            isColorsVisible = false,
-                            isExtendedColorsVisible = false,
-                            isBrushWidthSliderVisible = false
-                        )
-                        Tool.SHAPES -> currentState.copy(
-                            selectedColor = action.color,
-                            isShapesVisible = true,
-                            isPencilEnabled = false,
-                            isBrushEnabled = false,
-                            isEraserEnabled = false,
-                            isColorsVisible = false,
-                            isExtendedColorsVisible = false,
-                            isEraserWidthSliderVisible = false,
-                            isBrushWidthSliderVisible = false
-                        )
-                    }
-                }
-            }
         }
     }
 
@@ -320,11 +215,8 @@ class MainViewModel : ViewModel() {
 }
 
 data class MainState(
-    val isPencilEnabled: Boolean = true,
-    val isBrushEnabled: Boolean = false,
-    val isEraserEnabled: Boolean = false,
-    val isShapesVisible: Boolean = false,
-    val isColorsVisible: Boolean = false,
+    val currentTool: Tool = Tool.PENCIL,
+    val previousTool: Tool = Tool.PENCIL,
     val isExtendedColorsVisible: Boolean = false,
     val frames: List<Frame> = listOf(Frame()),
     val currentFrameIndex: Int = 0,
@@ -335,7 +227,6 @@ data class MainState(
     val eraserWidth: Float = 20f,
     val isBrushWidthSliderVisible: Boolean = false,
     val brushWidth: Float = 20f,
-    val previousTool: Tool = Tool.PENCIL
 )
 
 data class Frame(
@@ -344,14 +235,12 @@ data class Frame(
 )
 
 sealed interface MainAction {
-    data object EnablePencilTool : MainAction
-    data object EnableEraserTool : MainAction
-    data object ShowShapesPanel : MainAction
-    data object ShowColorsPanel : MainAction
-    data object HideColorsPanel : MainAction
+    data class SelectTool(val tool: Tool) : MainAction
     data object ToggleExtendedColorsPanel : MainAction
     data object HideEraserWidthSlider : MainAction
     data class UpdateEraserWidth(val width: Float) : MainAction
+    data object HideBrushWidthSlider : MainAction
+    data class UpdateBrushWidth(val width: Float) : MainAction
     data class AddDrawingPath(val path: List<Offset>) : MainAction
     data class AddEraserPath(val path: List<Offset>) : MainAction
     data class AddShape(val shape: Shape, val center: Offset, val size: Float) : MainAction
@@ -362,9 +251,6 @@ sealed interface MainAction {
     data object StartPlayback : MainAction
     data object StopPlayback : MainAction
     data class SelectColor(val color: Int) : MainAction
-    data object EnableBrushTool : MainAction
-    data object HideBrushWidthSlider : MainAction
-    data class UpdateBrushWidth(val width: Float) : MainAction
 }
 
 sealed interface DrawAction {
@@ -380,7 +266,6 @@ sealed interface Shape {
     data object Arrow : Shape
 }
 
-// Добавим enum для инструментов
 enum class Tool {
-    PENCIL, BRUSH, ERASER, SHAPES
+    PENCIL, BRUSH, ERASER, SHAPES, COLORS
 }

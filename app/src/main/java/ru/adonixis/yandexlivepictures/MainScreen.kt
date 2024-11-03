@@ -312,26 +312,27 @@ fun MainScreen(
                         .onSizeChanged {
                             canvasSize = it.toSize()
                         }
-                        .pointerInput(state.isPencilEnabled, state.isEraserEnabled, state.isBrushEnabled) {
+                        .pointerInput(state.currentTool) {
                             if (!state.isPlaybackActive) {
-                                when {
-                                    state.isPencilEnabled -> {
+                                when (state.currentTool) {
+                                    Tool.PENCIL, Tool.BRUSH -> {
                                         awaitPointerEventScope {
                                             var path = mutableListOf<Offset>()
                                             while (true) {
                                                 val event = awaitPointerEvent()
                                                 when (event.type) {
                                                     PointerEventType.Press -> {
-                                                        val position =
-                                                            event.changes.first().position
+                                                        val position = event.changes.first().position
                                                         path = mutableListOf(position)
                                                         currentPath.clear()
                                                         currentPath.addAll(path)
+                                                        if (state.currentTool == Tool.BRUSH) {
+                                                            viewModel.onAction(MainAction.HideBrushWidthSlider)
+                                                        }
                                                     }
 
                                                     PointerEventType.Move -> {
-                                                        val position =
-                                                            event.changes.first().position
+                                                        val position = event.changes.first().position
                                                         path.add(position)
                                                         currentPath.clear()
                                                         currentPath.addAll(path)
@@ -342,73 +343,26 @@ fun MainScreen(
                                                             path.add(path.first())
                                                         }
                                                         viewModel.onAction(
-                                                            MainAction.AddDrawingPath(
-                                                                path
-                                                            )
+                                                            MainAction.AddDrawingPath(path)
                                                         )
                                                         path = mutableListOf()
                                                         currentPath.clear()
                                                     }
 
-                                                    else -> { /* ignore */
-                                                    }
+                                                    else -> { /* ignore */ }
                                                 }
                                             }
                                         }
                                     }
 
-                                    state.isBrushEnabled -> {
+                                    Tool.ERASER -> {
                                         awaitPointerEventScope {
                                             var path = mutableListOf<Offset>()
                                             while (true) {
                                                 val event = awaitPointerEvent()
                                                 when (event.type) {
                                                     PointerEventType.Press -> {
-                                                        val position =
-                                                            event.changes.first().position
-                                                        path = mutableListOf(position)
-                                                        currentPath.clear()
-                                                        currentPath.addAll(path)
-                                                        viewModel.onAction(MainAction.HideBrushWidthSlider)
-                                                    }
-
-                                                    PointerEventType.Move -> {
-                                                        val position =
-                                                            event.changes.first().position
-                                                        path.add(position)
-                                                        currentPath.clear()
-                                                        currentPath.addAll(path)
-                                                    }
-
-                                                    PointerEventType.Release -> {
-                                                        if (path.size == 1) {
-                                                            path.add(path.first())
-                                                        }
-                                                        viewModel.onAction(
-                                                            MainAction.AddDrawingPath(
-                                                                path
-                                                            )
-                                                        )
-                                                        path = mutableListOf()
-                                                        currentPath.clear()
-                                                    }
-
-                                                    else -> { /* ignore */
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    state.isEraserEnabled -> {
-                                        awaitPointerEventScope {
-                                            var path = mutableListOf<Offset>()
-                                            while (true) {
-                                                val event = awaitPointerEvent()
-                                                when (event.type) {
-                                                    PointerEventType.Press -> {
-                                                        val position =
-                                                            event.changes.first().position
+                                                        val position = event.changes.first().position
                                                         path = mutableListOf(position)
                                                         currentEraserPath.clear()
                                                         currentEraserPath.addAll(path)
@@ -416,8 +370,7 @@ fun MainScreen(
                                                     }
 
                                                     PointerEventType.Move -> {
-                                                        val position =
-                                                            event.changes.first().position
+                                                        val position = event.changes.first().position
                                                         path.add(position)
                                                         currentEraserPath.clear()
                                                         currentEraserPath.addAll(path)
@@ -428,20 +381,19 @@ fun MainScreen(
                                                             path.add(path.first())
                                                         }
                                                         viewModel.onAction(
-                                                            MainAction.AddEraserPath(
-                                                                path
-                                                            )
+                                                            MainAction.AddEraserPath(path)
                                                         )
                                                         path = mutableListOf()
                                                         currentEraserPath.clear()
                                                     }
 
-                                                    else -> { /* ignore */
-                                                    }
+                                                    else -> { /* ignore */ }
                                                 }
                                             }
                                         }
                                     }
+
+                                    else -> { /* ignore */ }
                                 }
                             }
                         }
@@ -585,7 +537,7 @@ fun MainScreen(
                                     path = Path().apply { drawSmoothLine(currentPath) },
                                     color = Color(state.selectedColor),
                                     style = Stroke(
-                                        width = (if (state.isPencilEnabled) 2f else state.brushWidth).dp.toPx(),
+                                        width = (if (state.currentTool == Tool.BRUSH) state.brushWidth else 2f).dp.toPx(),
                                         cap = StrokeCap.Round,
                                         join = StrokeJoin.Round
                                     )
@@ -626,7 +578,7 @@ fun MainScreen(
 
             // Панель с фигурами
             this@Column.AnimatedVisibility(
-                visible = state.isShapesVisible,
+                visible = state.currentTool == Tool.SHAPES,
                 enter = fadeIn(
                     animationSpec = tween(durationMillis = 200)
                 ),
@@ -766,7 +718,6 @@ fun MainScreen(
                                         modifier = Modifier.size(32.dp),
                                         onClick = {
                                             viewModel.onAction(MainAction.SelectColor(color.toArgb()))
-                                            viewModel.onAction(MainAction.HideColorsPanel)
                                         }
                                     ) {
                                         Box(
@@ -794,7 +745,7 @@ fun MainScreen(
 
                 // Панель с цветами
                 AnimatedVisibility(
-                    visible = state.isColorsVisible,
+                    visible = state.currentTool == Tool.COLORS,
                     enter = fadeIn(
                         animationSpec = tween(durationMillis = 200)
                     ),
@@ -836,7 +787,6 @@ fun MainScreen(
                             modifier = Modifier.size(32.dp),
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(White.toArgb()))
-                                viewModel.onAction(MainAction.HideColorsPanel)
                             }
                         ) {
                             Box(
@@ -861,7 +811,6 @@ fun MainScreen(
                             modifier = Modifier.size(32.dp),
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Red.toArgb()))
-                                viewModel.onAction(MainAction.HideColorsPanel)
                             }
                         ) {
                             Box(
@@ -886,7 +835,6 @@ fun MainScreen(
                             modifier = Modifier.size(32.dp),
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Black.toArgb()))
-                                viewModel.onAction(MainAction.HideColorsPanel)
                             }
                         ) {
                             Box(
@@ -911,7 +859,6 @@ fun MainScreen(
                             modifier = Modifier.size(32.dp),
                             onClick = {
                                 viewModel.onAction(MainAction.SelectColor(Blue.toArgb()))
-                                viewModel.onAction(MainAction.HideColorsPanel)
                             }
                         ) {
                             Box(
@@ -1005,13 +952,13 @@ fun MainScreen(
         ) {
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.EnablePencilTool) },
+                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.PENCIL)) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_pencil_32),
                     contentDescription = "Pencil icon",
-                    tint = if (state.isPencilEnabled)
+                    tint = if (state.currentTool == Tool.PENCIL)
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurface
@@ -1020,13 +967,13 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.EnableBrushTool) },
+                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.BRUSH)) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_brush_32),
                     contentDescription = "Brush icon",
-                    tint = if (state.isBrushEnabled)
+                    tint = if (state.currentTool == Tool.BRUSH)
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurface
@@ -1035,13 +982,13 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.EnableEraserTool) },
+                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.ERASER)) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_erase_32),
                     contentDescription = "Erase icon",
-                    tint = if (state.isEraserEnabled)
+                    tint = if (state.currentTool == Tool.ERASER)
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurface
@@ -1050,13 +997,13 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.ShowShapesPanel) },
+                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.SHAPES)) },
                 enabled = !state.isPlaybackActive
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_instruments_32),
                     contentDescription = "Instruments icon",
-                    tint = if (state.isShapesVisible)
+                    tint = if (state.currentTool == Tool.SHAPES)
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurface
@@ -1065,7 +1012,7 @@ fun MainScreen(
 
             IconButton(
                 modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.ShowColorsPanel) },
+                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.COLORS)) },
                 enabled = !state.isPlaybackActive
             ) {
                 Box(
@@ -1074,7 +1021,7 @@ fun MainScreen(
                         .background(color = Color(state.selectedColor), shape = CircleShape)
                         .border(
                             width = 1.5.dp,
-                            color = if (state.isColorsVisible)
+                            color = if (state.currentTool == Tool.COLORS)
                                 MaterialTheme.colorScheme.primary
                             else
                                 MaterialTheme.colorScheme.onBackground,
