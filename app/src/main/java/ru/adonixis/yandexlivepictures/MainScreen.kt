@@ -1,5 +1,9 @@
 package ru.adonixis.yandexlivepictures
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,64 +19,53 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import ru.adonixis.yandexlivepictures.theme.Blue
-import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.toSize
-import ru.adonixis.yandexlivepictures.theme.Black
-import ru.adonixis.yandexlivepictures.theme.Red
-import ru.adonixis.yandexlivepictures.theme.White
-import kotlin.math.min
-import androidx.compose.ui.graphics.toArgb
-import kotlin.math.ceil
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.text.isDigitsOnly
+import androidx.lifecycle.viewmodel.compose.viewModel
+import ru.adonixis.yandexlivepictures.theme.Black
+import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
+import kotlin.math.ceil
+import kotlin.math.min
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
@@ -846,15 +839,15 @@ fun MainScreen(
                         IconButton(
                             modifier = Modifier.size(32.dp),
                             onClick = {
-                                viewModel.onAction(MainAction.SelectColor(White.toArgb()))
+                                viewModel.onAction(MainAction.SelectColor(Colors.White.toArgb()))
                             }
                         ) {
                             Box(
                                 modifier = Modifier
                                     .size(28.dp)
-                                    .background(color = White, shape = CircleShape)
+                                    .background(color = Colors.White, shape = CircleShape)
                                     .then(
-                                        if (state.selectedColor == White.toArgb()) {
+                                        if (state.selectedColor == Colors.White.toArgb()) {
                                             Modifier.border(
                                                 width = 1.5.dp,
                                                 color = MaterialTheme.colorScheme.primary,
@@ -870,15 +863,15 @@ fun MainScreen(
                         IconButton(
                             modifier = Modifier.size(32.dp),
                             onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Red.toArgb()))
+                                viewModel.onAction(MainAction.SelectColor(Colors.Red.toArgb()))
                             }
                         ) {
                             Box(
                                 modifier = Modifier
                                     .size(28.dp)
-                                    .background(color = Red, shape = CircleShape)
+                                    .background(color = Colors.Red, shape = CircleShape)
                                     .then(
-                                        if (state.selectedColor == Red.toArgb()) {
+                                        if (state.selectedColor == Colors.Red.toArgb()) {
                                             Modifier.border(
                                                 width = 1.5.dp,
                                                 color = MaterialTheme.colorScheme.primary,
@@ -894,15 +887,15 @@ fun MainScreen(
                         IconButton(
                             modifier = Modifier.size(32.dp),
                             onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Black.toArgb()))
+                                viewModel.onAction(MainAction.SelectColor(Colors.Black.toArgb()))
                             }
                         ) {
                             Box(
                                 modifier = Modifier
                                     .size(28.dp)
-                                    .background(color = Black, shape = CircleShape)
+                                    .background(color = Colors.Black, shape = CircleShape)
                                     .then(
-                                        if (state.selectedColor == Black.toArgb()) {
+                                        if (state.selectedColor == Colors.Black.toArgb()) {
                                             Modifier.border(
                                                 width = 1.5.dp,
                                                 color = MaterialTheme.colorScheme.primary,
@@ -918,15 +911,15 @@ fun MainScreen(
                         IconButton(
                             modifier = Modifier.size(32.dp),
                             onClick = {
-                                viewModel.onAction(MainAction.SelectColor(Blue.toArgb()))
+                                viewModel.onAction(MainAction.SelectColor(Colors.Blue.toArgb()))
                             }
                         ) {
                             Box(
                                 modifier = Modifier
                                     .size(28.dp)
-                                    .background(color = Blue, shape = CircleShape)
+                                    .background(color = Colors.Blue, shape = CircleShape)
                                     .then(
-                                        if (state.selectedColor == Blue.toArgb()) {
+                                        if (state.selectedColor == Colors.Blue.toArgb()) {
                                             Modifier.border(
                                                 width = 1.5.dp,
                                                 color = MaterialTheme.colorScheme.primary,

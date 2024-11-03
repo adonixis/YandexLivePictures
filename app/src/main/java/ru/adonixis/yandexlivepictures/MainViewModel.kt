@@ -5,14 +5,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
-import ru.adonixis.yandexlivepictures.theme.Black
-import ru.adonixis.yandexlivepictures.theme.Blue
 
 class MainViewModel : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -277,7 +275,7 @@ data class MainState(
     val currentFrameIndex: Int = 0,
     val isPlaybackActive: Boolean = false,
     val playbackFrameIndex: Int = 0,
-    val selectedColor: Int = Black.toArgb(),
+    val selectedColor: Int = Colors.Black.toArgb(),
     val isEraserWidthSliderVisible: Boolean = false,
     val eraserWidth: Float = 20f,
     val isBrushWidthSliderVisible: Boolean = false,
