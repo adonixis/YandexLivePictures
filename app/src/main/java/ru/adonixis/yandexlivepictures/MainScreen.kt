@@ -384,11 +384,26 @@ fun MainScreen(
                 }
             }
 
-            // Правая группа кнопок (Play и Stop) - всегда видима
+            // Правая группа кнопок (Save, Play и Stop) - всегда видима
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                if (state.isPlaybackActive) {
+                    IconButton(
+                        modifier = Modifier.size(36.dp),
+                        onClick = {
+                            viewModel.onAction(MainAction.StopPlayback)
+                            viewModel.onAction(MainAction.SaveAsGif(context))
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_save_32),
+                            contentDescription = "Save as GIF"
+                        )
+                    }
+                }
+
                 IconButton(
                     modifier = Modifier.size(36.dp),
                     onClick = { viewModel.onAction(MainAction.StopPlayback) },
@@ -428,17 +443,6 @@ fun MainScreen(
                             MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-
-            IconButton(
-                modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.SaveAsGif(context)) },
-                enabled = !state.isPlaybackActive
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_save_32),
-                    contentDescription = "Save as GIF"
-                )
             }
         }
 
