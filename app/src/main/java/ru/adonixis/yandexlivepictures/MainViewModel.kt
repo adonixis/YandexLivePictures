@@ -348,20 +348,23 @@ class MainViewModel : ViewModel() {
                     )
                 }
                 
+                val scaledWidth = (state.value.canvasSize.width / 2).toInt()
+                val scaledHeight = (state.value.canvasSize.height / 2).toInt()
+                
                 val framePaths = coroutineScope {
                     state.value.frames.mapIndexed { index, frame ->
                         async {
-                            val bitmap = Bitmap.createBitmap(
+                            val fullSizeBitmap = Bitmap.createBitmap(
                                 state.value.canvasSize.width.toInt(),
                                 state.value.canvasSize.height.toInt(),
                                 Bitmap.Config.ARGB_8888
                             )
-                            val canvas = Canvas(bitmap)
+                            val canvas = Canvas(fullSizeBitmap)
                             
                             val scaledBackground = Bitmap.createScaledBitmap(
                                 backgroundBitmap,
-                                bitmap.width,
-                                bitmap.height,
+                                fullSizeBitmap.width,
+                                fullSizeBitmap.height,
                                 true
                             )
                             canvas.drawBitmap(scaledBackground, 0f, 0f, null)
@@ -451,12 +454,20 @@ class MainViewModel : ViewModel() {
                                 }
                             }
                             
+                            val scaledBitmap = Bitmap.createScaledBitmap(
+                                fullSizeBitmap,
+                                scaledWidth,
+                                scaledHeight,
+                                true
+                            )
+                            fullSizeBitmap.recycle()
+                            
                             withContext(Dispatchers.IO) {
                                 val file = File(framesDir, "frame_$index.png")
                                 FileOutputStream(file).use { out ->
-                                    bitmap.compress(Bitmap.CompressFormat.PNG, 80, out)
+                                    scaledBitmap.compress(Bitmap.CompressFormat.PNG, 80, out)
                                 }
-                                bitmap.recycle()
+                                scaledBitmap.recycle()
                                 file.absolutePath
                             }
                         }
