@@ -69,11 +69,11 @@ class MainViewModel : ViewModel() {
             MainAction.ShowColorsPanel -> {
                 _state.update { currentState ->
                     val previousTool = when {
-                        currentState.isPencilEnabled -> "pencil"
-                        currentState.isBrushEnabled -> "brush"
-                        currentState.isEraserEnabled -> "eraser"
-                        currentState.isShapesVisible -> "shapes"
-                        else -> "pencil"
+                        currentState.isPencilEnabled -> Tool.PENCIL
+                        currentState.isBrushEnabled -> Tool.BRUSH
+                        currentState.isEraserEnabled -> Tool.ERASER
+                        currentState.isShapesVisible -> Tool.SHAPES
+                        else -> Tool.PENCIL
                     }
                     
                     currentState.copy(
@@ -256,7 +256,7 @@ class MainViewModel : ViewModel() {
             is MainAction.SelectColor -> {
                 _state.update { currentState ->
                     when (currentState.previousTool) {
-                        "pencil" -> currentState.copy(
+                        Tool.PENCIL -> currentState.copy(
                             selectedColor = action.color,
                             isPencilEnabled = true,
                             isBrushEnabled = false,
@@ -267,7 +267,7 @@ class MainViewModel : ViewModel() {
                             isEraserWidthSliderVisible = false,
                             isBrushWidthSliderVisible = false
                         )
-                        "brush" -> currentState.copy(
+                        Tool.BRUSH -> currentState.copy(
                             selectedColor = action.color,
                             isBrushEnabled = true,
                             isBrushWidthSliderVisible = true,
@@ -278,7 +278,7 @@ class MainViewModel : ViewModel() {
                             isExtendedColorsVisible = false,
                             isEraserWidthSliderVisible = false
                         )
-                        "eraser" -> currentState.copy(
+                        Tool.ERASER -> currentState.copy(
                             selectedColor = action.color,
                             isEraserEnabled = true,
                             isEraserWidthSliderVisible = true,
@@ -289,23 +289,12 @@ class MainViewModel : ViewModel() {
                             isExtendedColorsVisible = false,
                             isBrushWidthSliderVisible = false
                         )
-                        "shapes" -> currentState.copy(
+                        Tool.SHAPES -> currentState.copy(
                             selectedColor = action.color,
                             isShapesVisible = true,
                             isPencilEnabled = false,
                             isBrushEnabled = false,
                             isEraserEnabled = false,
-                            isColorsVisible = false,
-                            isExtendedColorsVisible = false,
-                            isEraserWidthSliderVisible = false,
-                            isBrushWidthSliderVisible = false
-                        )
-                        else -> currentState.copy(
-                            selectedColor = action.color,
-                            isPencilEnabled = true,
-                            isBrushEnabled = false,
-                            isEraserEnabled = false,
-                            isShapesVisible = false,
                             isColorsVisible = false,
                             isExtendedColorsVisible = false,
                             isEraserWidthSliderVisible = false,
@@ -346,7 +335,7 @@ data class MainState(
     val eraserWidth: Float = 20f,
     val isBrushWidthSliderVisible: Boolean = false,
     val brushWidth: Float = 20f,
-    val previousTool: String = "pencil"
+    val previousTool: Tool = Tool.PENCIL
 )
 
 data class Frame(
@@ -389,4 +378,9 @@ sealed interface Shape {
     data object Circle : Shape
     data object Triangle : Shape
     data object Arrow : Shape
+}
+
+// Добавим enum для инструментов
+enum class Tool {
+    PENCIL, BRUSH, ERASER, SHAPES
 }
