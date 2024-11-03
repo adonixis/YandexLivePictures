@@ -195,17 +195,9 @@ private fun SliderTrack(
                 sweepAngleDegrees = 180f,
                 forceMoveTo = true
             )
-
-            val startY = centerY - 2.dp.toPx()
-            val endY = centerY - 6.dp.toPx()
             
-            quadraticTo(
-                x1 = sliderWidth / 2,
-                y1 = startY,
-                x2 = sliderWidth - 12.dp.toPx(),
-                y2 = endY
-            )
-
+            lineTo(sliderWidth - 12.dp.toPx(), centerY - 6.dp.toPx())
+            
             arcTo(
                 rect = Rect(
                     left = sliderWidth - 12.dp.toPx(),
@@ -218,12 +210,7 @@ private fun SliderTrack(
                 forceMoveTo = false
             )
             
-            quadraticTo(
-                x1 = sliderWidth / 2,
-                y1 = centerY + 6.dp.toPx(),
-                x2 = 2.dp.toPx(),
-                y2 = centerY + 2.dp.toPx()
-            )
+            lineTo(2.dp.toPx(), centerY + 2.dp.toPx())
             
             close()
         }
