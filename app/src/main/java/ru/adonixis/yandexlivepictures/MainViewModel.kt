@@ -251,6 +251,21 @@ class MainViewModel : ViewModel() {
             is MainAction.UpdateCanvasSize -> {
                 _state.update { it.copy(canvasSize = action.size) }
             }
+            MainAction.ShowDeleteAllDialog -> {
+                _state.update { it.copy(isDeleteAllDialogVisible = true) }
+            }
+            MainAction.HideDeleteAllDialog -> {
+                _state.update { it.copy(isDeleteAllDialogVisible = false) }
+            }
+            MainAction.DeleteAllFrames -> {
+                _state.update { currentState ->
+                    currentState.copy(
+                        frames = listOf(Frame()),
+                        currentFrameIndex = 0,
+                        isDeleteAllDialogVisible = false
+                    )
+                }
+            }
         }
     }
 
@@ -281,7 +296,8 @@ data class MainState(
     val isBrushWidthSliderVisible: Boolean = false,
     val brushWidth: Float = 20f,
     val isGenerateFramesDialogVisible: Boolean = false,
-    val canvasSize: Size = Size.Zero
+    val canvasSize: Size = Size.Zero,
+    val isDeleteAllDialogVisible: Boolean = false
 )
 
 data class Frame(
@@ -310,6 +326,9 @@ sealed interface MainAction {
     data object HideGenerateFramesDialog : MainAction
     data class GenerateBouncingBallFrames(val count: Int) : MainAction
     data class UpdateCanvasSize(val size: Size) : MainAction
+    data object ShowDeleteAllDialog : MainAction
+    data object HideDeleteAllDialog : MainAction
+    data object DeleteAllFrames : MainAction
 }
 
 sealed interface DrawAction {

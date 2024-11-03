@@ -5,9 +5,16 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,8 +70,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.time.withTimeoutOrNull
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
+import java.time.Duration
 import kotlin.math.ceil
 import kotlin.math.min
 
@@ -144,6 +154,7 @@ private fun DrawScope.drawArrow(center: Offset, size: Float, color: Color) {
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
@@ -255,10 +266,21 @@ fun MainScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                IconButton(
-                    modifier = Modifier.size(36.dp),
-                    onClick = { viewModel.onAction(MainAction.DeleteCurrentFrame) },
-                    enabled = !state.isPlaybackActive
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .combinedClickable(
+                            onClick = {
+                                if (!state.isPlaybackActive)
+                                    viewModel.onAction(MainAction.DeleteCurrentFrame)
+                            },
+                            onLongClick = {
+                                if (!state.isPlaybackActive)
+                                    viewModel.onAction(MainAction.ShowDeleteAllDialog)
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_bin_32),
@@ -1085,6 +1107,28 @@ fun MainScreen(
                 )
             }
         }
+    }
+
+    if (state.isDeleteAllDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(MainAction.HideDeleteAllDialog) },
+            title = { Text("Удаление всех кадров") },
+            text = { Text("Все кадры будут удалены") },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.onAction(MainAction.DeleteAllFrames) }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.onAction(MainAction.HideDeleteAllDialog) }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
     }
 }
 
