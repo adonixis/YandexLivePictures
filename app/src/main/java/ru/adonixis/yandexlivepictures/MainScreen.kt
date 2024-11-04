@@ -1,5 +1,6 @@
 package ru.adonixis.yandexlivepictures
 
+import android.content.ClipData
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -283,6 +284,7 @@ fun MainScreen(
             when (result) {
                 is GifSavingResult.Success -> {
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        clipData = ClipData.newRawUri(null, result.uri)
                         type = "image/gif"
                         putExtra(Intent.EXTRA_STREAM, result.uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
