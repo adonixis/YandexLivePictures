@@ -181,14 +181,14 @@ class MainViewModel : ViewModel() {
                         )
                     } else {
                         val newFrames = currentState.frames.toMutableList()
-                        newFrames.removeAt(currentState.currentFrameIndex)
-                        
+                        if (currentState.currentFrameIndex < currentState.frames.size) {
+                            newFrames.removeAt(currentState.currentFrameIndex)
+                        }
                         val newIndex = when {
                             currentState.currentFrameIndex == 0 -> 0
                             currentState.currentFrameIndex >= newFrames.size -> newFrames.size - 1
                             else -> currentState.currentFrameIndex
                         }
-                        
                         currentState.copy(
                             frames = newFrames,
                             currentFrameIndex = newIndex
