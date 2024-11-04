@@ -14,6 +14,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,18 +26,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,10 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -56,6 +58,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.PointerEventType
@@ -69,26 +73,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.ui.graphics.drawscope.rotate
-import ru.adonixis.yandexlivepictures.theme.Black
-import ru.adonixis.yandexlivepictures.theme.White
-import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
-import kotlin.math.ceil
-import kotlin.math.min
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.ui.graphics.graphicsLayer
 import ru.adonixis.yandexlivepictures.components.dialog.DeleteAllFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.DuplicateFrameDialog
 import ru.adonixis.yandexlivepictures.components.dialog.GenerateFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.PlaybackSpeedDialog
-import ru.adonixis.yandexlivepictures.components.panel.ProgressIndicator
-import ru.adonixis.yandexlivepictures.theme.GreenDark
-import ru.adonixis.yandexlivepictures.theme.GreenLight
+import ru.adonixis.yandexlivepictures.components.ProgressIndicator
+import ru.adonixis.yandexlivepictures.components.panel.WidthSlider
+import ru.adonixis.yandexlivepictures.theme.Black
+import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
+import kotlin.math.ceil
+import kotlin.math.min
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -193,74 +187,7 @@ private fun DrawScope.drawArrow(center: Offset, size: Float, color: Color, scale
     }
 }
 
-@Composable
-private fun SliderThumb() {
-    Box(
-        modifier = Modifier
-            .size(20.dp)
-            .background(White, CircleShape)
-    )
-}
-
-@Composable
-private fun SliderTrack(
-    modifier: Modifier = Modifier
-) {
-    val gradientBrush = Brush.horizontalGradient(
-        colors = listOf(
-            GreenDark,
-            GreenLight
-        )
-    )
-    
-    Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(12.dp)
-    ) {
-        val sliderWidth = size.width
-        val centerY = size.height / 2
-        
-        val path = Path().apply {
-            arcTo(
-                rect = Rect(
-                    left = 0f,
-                    top = centerY - 2.dp.toPx(),
-                    right = 4.dp.toPx(),
-                    bottom = centerY + 2.dp.toPx()
-                ),
-                startAngleDegrees = 90f,
-                sweepAngleDegrees = 180f,
-                forceMoveTo = true
-            )
-            
-            lineTo(sliderWidth - 12.dp.toPx(), centerY - 6.dp.toPx())
-            
-            arcTo(
-                rect = Rect(
-                    left = sliderWidth - 12.dp.toPx(),
-                    top = centerY - 6.dp.toPx(),
-                    right = sliderWidth,
-                    bottom = centerY + 6.dp.toPx()
-                ),
-                startAngleDegrees = 270f,
-                sweepAngleDegrees = 180f,
-                forceMoveTo = false
-            )
-            
-            lineTo(2.dp.toPx(), centerY + 2.dp.toPx())
-            
-            close()
-        }
-        
-        drawPath(
-            path = path,
-            brush = gradientBrush
-        )
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
@@ -1423,17 +1350,14 @@ fun MainScreen(
                             )
                             .padding(16.dp)
                     ) {
-                        Slider(
-                            modifier = Modifier.height(20.dp),
+                        WidthSlider(
                             value = with(density) { state.eraserWidth.toDp().value },
                             onValueChange = { dpValue ->
                                 with(density) {
                                     viewModel.onAction(MainAction.UpdateEraserWidth(dpValue.dp.toPx()))
                                 }
                             },
-                            valueRange = ScreenConstants.SLIDER_MIN..ScreenConstants.SLIDER_MAX,
-                            thumb = { SliderThumb() },
-                            track = { SliderTrack() }
+                            valueRange = ScreenConstants.SLIDER_MIN..ScreenConstants.SLIDER_MAX
                         )
                     }
                 }
@@ -1459,17 +1383,14 @@ fun MainScreen(
                             )
                             .padding(16.dp)
                     ) {
-                        Slider(
-                            modifier = Modifier.height(20.dp),
+                        WidthSlider(
                             value = with(density) { state.brushWidth.toDp().value },
                             onValueChange = { dpValue ->
                                 with(density) {
                                     viewModel.onAction(MainAction.UpdateBrushWidth(dpValue.dp.toPx()))
                                 }
                             },
-                            valueRange = ScreenConstants.SLIDER_MIN..ScreenConstants.SLIDER_MAX,
-                            thumb = { SliderThumb() },
-                            track = { SliderTrack() }
+                            valueRange = ScreenConstants.SLIDER_MIN..ScreenConstants.SLIDER_MAX
                         )
                     }
                 }

@@ -1,4 +1,4 @@
-package ru.adonixis.yandexlivepictures.components.panel
+package ru.adonixis.yandexlivepictures.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
