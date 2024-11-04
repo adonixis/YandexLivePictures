@@ -115,7 +115,6 @@ fun ColorPanel(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(bottom = 16.dp)
                     .background(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alphaBackground),
                         shape = RoundedCornerShape(4.dp)
