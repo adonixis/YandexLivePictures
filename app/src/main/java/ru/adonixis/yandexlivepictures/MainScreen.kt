@@ -684,44 +684,62 @@ fun MainScreen(
                                             while (true) {
                                                 val event = awaitPointerEvent()
                                                 when (event.type) {
+                                                    PointerEventType.Press -> {
+                                                        // Сбрасываем значения при новом касании
+                                                        previousDistance = 0f
+                                                        previousAngle = 0f
+                                                    }
+                                                    
                                                     PointerEventType.Move -> {
-                                                        if (event.changes.size == 2 && state.isShapeMovable) {
-                                                            val firstPoint = event.changes[0].position
-                                                            val secondPoint = event.changes[1].position
-                                                            
-                                                            val center = Offset(
-                                                                (firstPoint.x + secondPoint.x) / 2f,
-                                                                (firstPoint.y + secondPoint.y) / 2f
-                                                            )
-                                                            viewModel.onAction(MainAction.UpdateShapePosition(center))
-                                                            
-                                                            val currentDistance = firstPoint.getDistanceTo(secondPoint)
-                                                            if (previousDistance > 0) {
-                                                                val scaleFactor = currentDistance / previousDistance
-                                                                currentScale *= scaleFactor
-                                                                viewModel.onAction(MainAction.UpdateShapeScale(currentScale))
+                                                        if (!state.isShapeMovable) continue
+                                                        
+                                                        when (event.changes.size) {
+                                                            1 -> {
+                                                                val position = event.changes.first().position
+                                                                viewModel.onAction(MainAction.UpdateShapePosition(position))
+                                                                event.changes.first().consume()
                                                             }
-                                                            previousDistance = currentDistance
-                                                            
-                                                            val angle = kotlin.math.atan2(
-                                                                secondPoint.y - firstPoint.y,
-                                                                secondPoint.x - firstPoint.x
-                                                            ) * 180f / kotlin.math.PI.toFloat()
-                                                            
-                                                            if (previousAngle != 0f) {
-                                                                val deltaAngle = angle - previousAngle
-                                                                currentRotation = (currentRotation + deltaAngle) % 360f
-                                                                viewModel.onAction(MainAction.UpdateShapeRotation(currentRotation))
+                                                            2 -> {
+                                                                val firstPoint = event.changes[0].position
+                                                                val secondPoint = event.changes[1].position
+                                                                
+                                                                val center = Offset(
+                                                                    (firstPoint.x + secondPoint.x) / 2f,
+                                                                    (firstPoint.y + secondPoint.y) / 2f
+                                                                )
+                                                                viewModel.onAction(MainAction.UpdateShapePosition(center))
+                                                                
+                                                                val currentDistance = firstPoint.getDistanceTo(secondPoint)
+                                                                if (previousDistance > 0) {
+                                                                    val scaleFactor = currentDistance / previousDistance
+                                                                    currentScale *= scaleFactor
+                                                                    viewModel.onAction(MainAction.UpdateShapeScale(currentScale))
+                                                                }
+                                                                previousDistance = currentDistance
+                                                                
+                                                                val angle = kotlin.math.atan2(
+                                                                    secondPoint.y - firstPoint.y,
+                                                                    secondPoint.x - firstPoint.x
+                                                                ) * 180f / kotlin.math.PI.toFloat()
+                                                                
+                                                                if (previousAngle != 0f) {
+                                                                    val deltaAngle = angle - previousAngle
+                                                                    currentRotation = (currentRotation + deltaAngle) % 360f
+                                                                    viewModel.onAction(MainAction.UpdateShapeRotation(currentRotation))
+                                                                }
+                                                                previousAngle = angle
+                                                                
+                                                                event.changes.forEach { it.consume() }
                                                             }
-                                                            previousAngle = angle
-                                                            
-                                                            event.changes.forEach { it.consume() }
                                                         }
                                                     }
+                                                    
                                                     PointerEventType.Release -> {
-                                                        if (event.changes.size == 2) {
-                                                            previousDistance = 0f
-                                                            previousAngle = 0f
+                                                        when (event.changes.size) {
+                                                            2 -> {
+                                                                previousDistance = 0f
+                                                                previousAngle = 0f
+                                                            }
                                                         }
                                                     }
                                                 }
