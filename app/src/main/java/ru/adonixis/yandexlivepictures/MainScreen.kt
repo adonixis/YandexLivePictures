@@ -318,7 +318,7 @@ fun MainScreen(
                             playbackSpeed = text
                         }
                     },
-                    label = { Text("Кадров в секунду (от 0 до 1000)") },
+                    label = { Text("Кадов в секунду (от 0 до 1000)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             },
@@ -450,7 +450,12 @@ fun MainScreen(
 
                 IconButton(
                     modifier = Modifier.size(36.dp),
-                    onClick = { viewModel.onAction(MainAction.ShowFrameList) },
+                    onClick = {
+                        if (state.isFrameListVisible)
+                            viewModel.onAction(MainAction.HideFrameList)
+                        else
+                            viewModel.onAction(MainAction.ShowFrameList)
+                    },
                     enabled = !state.isPlaybackActive
                 ) {
                     Icon(
@@ -548,7 +553,7 @@ fun MainScreen(
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
-                        .onSizeChanged { 
+                        .onSizeChanged {
                             canvasSize = it.toSize()
                             viewModel.onAction(MainAction.UpdateCanvasSize(canvasSize))
                         }
@@ -562,17 +567,20 @@ fun MainScreen(
                                                 val event = awaitPointerEvent()
                                                 when (event.type) {
                                                     PointerEventType.Press -> {
-                                                        val position = event.changes.first().position
+                                                        val position =
+                                                            event.changes.first().position
                                                         path = mutableListOf(position)
                                                         currentPath.clear()
                                                         currentPath.addAll(path)
-                                                        if (state.currentTool == Tool.BRUSH) {
-                                                            viewModel.onAction(MainAction.HideBrushWidthSlider)
-                                                        }
+
+                                                        viewModel.onAction(MainAction.HideBrushWidthSlider)
+                                                        viewModel.onAction(MainAction.HideEraserWidthSlider)
+                                                        viewModel.onAction(MainAction.HideFrameList)
                                                     }
 
                                                     PointerEventType.Move -> {
-                                                        val position = event.changes.first().position
+                                                        val position =
+                                                            event.changes.first().position
                                                         path.add(position)
                                                         currentPath.clear()
                                                         currentPath.addAll(path)
@@ -589,7 +597,8 @@ fun MainScreen(
                                                         currentPath.clear()
                                                     }
 
-                                                    else -> { /* ignore */ }
+                                                    else -> { /* ignore */
+                                                    }
                                                 }
                                             }
                                         }
@@ -602,15 +611,20 @@ fun MainScreen(
                                                 val event = awaitPointerEvent()
                                                 when (event.type) {
                                                     PointerEventType.Press -> {
-                                                        val position = event.changes.first().position
+                                                        val position =
+                                                            event.changes.first().position
                                                         path = mutableListOf(position)
                                                         currentEraserPath.clear()
                                                         currentEraserPath.addAll(path)
+
                                                         viewModel.onAction(MainAction.HideEraserWidthSlider)
+                                                        viewModel.onAction(MainAction.HideBrushWidthSlider)
+                                                        viewModel.onAction(MainAction.HideFrameList)
                                                     }
 
                                                     PointerEventType.Move -> {
-                                                        val position = event.changes.first().position
+                                                        val position =
+                                                            event.changes.first().position
                                                         path.add(position)
                                                         currentEraserPath.clear()
                                                         currentEraserPath.addAll(path)
@@ -627,13 +641,15 @@ fun MainScreen(
                                                         currentEraserPath.clear()
                                                     }
 
-                                                    else -> { /* ignore */ }
+                                                    else -> { /* ignore */
+                                                    }
                                                 }
                                             }
                                         }
                                     }
 
-                                    else -> { /* ignore */ }
+                                    else -> { /* ignore */
+                                    }
                                 }
                             }
                         }
@@ -822,12 +838,12 @@ fun MainScreen(
                     visible = state.isFrameListVisible,
                     enter = fadeIn(animationSpec = tween(durationMillis = 200)),
                     exit = fadeOut(animationSpec = tween(durationMillis = 200)),
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 80.dp)
+                    modifier = Modifier.align(Alignment.TopCenter)
                 ) {
                     Box(
                         modifier = Modifier
+                            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+                            .clickable(enabled = false) { }
                             .background(
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
                                 shape = RoundedCornerShape(4.dp)
@@ -839,42 +855,96 @@ fun MainScreen(
                             )
                             .padding(12.dp)
                     ) {
+                        val listState = rememberLazyListState()
+
+                        LaunchedEffect(state.isFrameListVisible, state.currentFrameIndex) {
+                            if (state.isFrameListVisible) {
+                                val isItemVisible = listState.layoutInfo.visibleItemsInfo.any { 
+                                    it.index == state.currentFrameIndex 
+                                }
+
+                                if (!isItemVisible) {
+                                    listState.animateScrollToItem(state.currentFrameIndex)
+                                }
+                            }
+                        }
+
                         LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            state = rememberLazyListState()
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            state = listState
                         ) {
                             items(state.frames.indices.toList()) { index ->
-                                Box(
-                                    modifier = Modifier
-                                        .size(60.dp)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(
-                                            color = if (index == state.currentFrameIndex)
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                            else
-                                                MaterialTheme.colorScheme.surface
-                                        )
-                                        .border(
-                                            width = 1.dp,
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(
+                                                color = if (index == state.currentFrameIndex)
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                                else
+                                                    MaterialTheme.colorScheme.surface
+                                            )
+                                            .border(
+                                                width = 1.dp,
+                                                color = if (index == state.currentFrameIndex)
+                                                    MaterialTheme.colorScheme.primary
+                                                else
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                                shape = RoundedCornerShape(4.dp)
+                                            )
+                                            .clickable {
+                                                viewModel.onAction(MainAction.SelectFrame(index))
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "${index + 1}",
+                                            style = MaterialTheme.typography.titleMedium,
                                             color = if (index == state.currentFrameIndex)
                                                 MaterialTheme.colorScheme.primary
                                             else
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                                            shape = RoundedCornerShape(4.dp)
+                                                MaterialTheme.colorScheme.onSurface
                                         )
-                                        .clickable {
-                                            viewModel.onAction(MainAction.SelectFrame(index))
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "${index + 1}",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = if (index == state.currentFrameIndex)
-                                            MaterialTheme.colorScheme.primary
-                                        else
-                                            MaterialTheme.colorScheme.onSurface
-                                    )
+                                    }
+
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        IconButton(
+                                            modifier = Modifier.size(24.dp),
+                                            onClick = {
+                                                viewModel.onAction(MainAction.SelectFrame(index))
+                                                viewModel.onAction(MainAction.DuplicateCurrentFrame)
+                                            }
+                                        ) {
+                                            Icon(
+                                                modifier = Modifier.size(16.dp),
+                                                painter = painterResource(id = R.drawable.ic_duplicate_24),
+                                                contentDescription = "Duplicate frame",
+                                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                            )
+                                        }
+
+                                        IconButton(
+                                            modifier = Modifier.size(24.dp),
+                                            onClick = {
+                                                viewModel.onAction(MainAction.SelectFrame(index))
+                                                viewModel.onAction(MainAction.DeleteCurrentFrame)
+                                            }
+                                        ) {
+                                            Icon(
+                                                modifier = Modifier.size(16.dp),
+                                                painter = painterResource(id = R.drawable.ic_bin_32),
+                                                contentDescription = "Delete frame",
+                                                tint = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1345,15 +1415,17 @@ fun MainScreen(
                 Box(
                     modifier = Modifier
                         .size(28.dp)
-                        .background(color = Color(state.selectedColor), shape = CircleShape)
-                        .border(
-                            width = 1.5.dp,
-                            color = if (state.currentTool == Tool.COLORS)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onBackground,
-                            shape = CircleShape
-                        ),
+                        .background(color = Color(state.selectedColor),
+                        shape = CircleShape
+                    )
+                    .border(
+                        width = 1.5.dp,
+                        color = if (state.currentTool == Tool.COLORS)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onBackground,
+                        shape = CircleShape
+                    ),
                 )
             }
         }
