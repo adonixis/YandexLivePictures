@@ -497,6 +497,8 @@ fun MainScreen(
                             if (state.currentFrameIndex > 0) {
                                 val previousCheckPoint = saveLayer(null, null)
 
+                                val previousFrameLayer = saveLayer(null, null)
+
                                 val previousFrame = state.frames[state.currentFrameIndex - 1]
                                 previousFrame.actionHistory.take(previousFrame.currentHistoryPosition + 1)
                                     .forEach { action ->
@@ -504,7 +506,7 @@ fun MainScreen(
                                             is DrawAction.DrawPath -> {
                                                 drawPath(
                                                     path = Path().apply { drawSmoothLine(action.path) },
-                                                    color = Color(action.color).copy(alpha = 0.3f),
+                                                    color = Color(action.color),
                                                     style = Stroke(
                                                         width = action.width,
                                                         cap = StrokeCap.Round,
@@ -527,14 +529,20 @@ fun MainScreen(
                                             }
                                             is DrawAction.DrawShape -> {
                                                 when (action.shape) {
-                                                    Shape.Square -> drawSquare(action.center, action.size, Color(action.color).copy(alpha = 0.3f), action.scale, action.rotation)
-                                                    Shape.Circle -> drawCircle(action.center, action.size, Color(action.color).copy(alpha = 0.3f), action.scale, action.rotation)
-                                                    Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color).copy(alpha = 0.3f), action.scale, action.rotation)
-                                                    Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color).copy(alpha = 0.3f), action.scale, action.rotation)
+                                                    Shape.Square -> drawSquare(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                    Shape.Circle -> drawCircle(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                    Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                    Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color), action.scale, action.rotation)
                                                 }
                                             }
                                         }
                                     }
+
+                                restoreToCount(previousFrameLayer)
+                                drawRect(
+                                    color = Color.White.copy(alpha = 0.3f),
+                                    blendMode = BlendMode.DstIn
+                                )
 
                                 restoreToCount(previousCheckPoint)
                             }
