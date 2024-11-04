@@ -357,20 +357,27 @@ class MainViewModel : ViewModel() {
                 val framePaths = coroutineScope {
                     state.value.frames.mapIndexed { index, frame ->
                         async {
-                            val fullSizeBitmap = Bitmap.createBitmap(
+                            val drawingBitmap = Bitmap.createBitmap(
                                 state.value.canvasSize.width.toInt(),
                                 state.value.canvasSize.height.toInt(),
                                 Bitmap.Config.ARGB_8888
                             )
-                            val canvas = Canvas(fullSizeBitmap)
+                            val finalBitmap = Bitmap.createBitmap(
+                                state.value.canvasSize.width.toInt(),
+                                state.value.canvasSize.height.toInt(),
+                                Bitmap.Config.ARGB_8888
+                            )
+                            
+                            val drawingCanvas = Canvas(drawingBitmap)
+                            val finalCanvas = Canvas(finalBitmap)
                             
                             val scaledBackground = Bitmap.createScaledBitmap(
                                 backgroundBitmap,
-                                fullSizeBitmap.width,
-                                fullSizeBitmap.height,
+                                finalBitmap.width,
+                                finalBitmap.height,
                                 true
                             )
-                            canvas.drawBitmap(scaledBackground, 0f, 0f, null)
+                            finalCanvas.drawBitmap(scaledBackground, 0f, 0f, null)
                             scaledBackground.recycle()
                             
                             frame.actionHistory.take(frame.currentHistoryPosition + 1).forEach { action ->
@@ -383,12 +390,7 @@ class MainViewModel : ViewModel() {
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
                                         }
-                                        val path = Path()
-                                        action.path.forEachIndexed { i, offset ->
-                                            if (i == 0) path.moveTo(offset.x, offset.y)
-                                            else path.lineTo(offset.x, offset.y)
-                                        }
-                                        canvas.drawPath(path, paint)
+                                        drawSmoothLine(drawingCanvas, action.path, paint)
                                     }
                                     is DrawAction.ErasePath -> {
                                         val paint = Paint().apply {
@@ -396,14 +398,10 @@ class MainViewModel : ViewModel() {
                                             style = Paint.Style.STROKE
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
+                                            color = android.graphics.Color.TRANSPARENT
                                             xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
                                         }
-                                        val path = Path()
-                                        action.path.forEachIndexed { i, offset ->
-                                            if (i == 0) path.moveTo(offset.x, offset.y)
-                                            else path.lineTo(offset.x, offset.y)
-                                        }
-                                        canvas.drawPath(path, paint)
+                                        drawSmoothLine(drawingCanvas, action.path, paint)
                                     }
                                     is DrawAction.DrawShape -> {
                                         val paint = Paint().apply {
@@ -422,10 +420,10 @@ class MainViewModel : ViewModel() {
                                                     lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
                                                     close()
                                                 }
-                                                canvas.drawPath(path, paint)
+                                                drawingCanvas.drawPath(path, paint)
                                             }
                                             Shape.Circle -> {
-                                                canvas.drawCircle(
+                                                drawingCanvas.drawCircle(
                                                     action.center.x,
                                                     action.center.y,
                                                     action.size / 2,
@@ -439,7 +437,7 @@ class MainViewModel : ViewModel() {
                                                     lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
                                                     close()
                                                 }
-                                                canvas.drawPath(path, paint)
+                                                drawingCanvas.drawPath(path, paint)
                                             }
                                             Shape.Arrow -> {
                                                 val path = Path().apply {
@@ -450,20 +448,24 @@ class MainViewModel : ViewModel() {
                                                     moveTo(action.center.x, action.center.y - action.size/2)
                                                     lineTo(action.center.x, action.center.y + action.size/2)
                                                 }
-                                                canvas.drawPath(path, paint)
+                                                drawingCanvas.drawPath(path, paint)
                                             }
                                         }
                                     }
                                 }
                             }
                             
+                            finalCanvas.drawBitmap(drawingBitmap, 0f, 0f, null)
+                            
+                            drawingBitmap.recycle()
+                            
                             val scaledBitmap = Bitmap.createScaledBitmap(
-                                fullSizeBitmap,
+                                finalBitmap,
                                 scaledWidth,
                                 scaledHeight,
                                 true
                             )
-                            fullSizeBitmap.recycle()
+                            finalBitmap.recycle()
 
                             withContext(Dispatchers.IO) {
                                 val file = File(framesDir, "frame_$index.png")
@@ -516,6 +518,33 @@ class MainViewModel : ViewModel() {
                     ) }
                 }
             }
+        }
+    }
+
+    private fun drawSmoothLine(canvas: Canvas, points: List<Offset>, paint: Paint) {
+        if (points.size > 1) {
+            val path = Path()
+            if (points.size > 1) {
+                path.moveTo(points.first().x, points.first().y)
+                for (i in 0 until points.size - 1) {
+                    val p0 = if (i > 0) points[i - 1] else points[i]
+                    val p1 = points[i]
+                    val p2 = points[i + 1]
+                    val p3 = if (i < points.size - 2) points[i + 2] else p2
+
+                    val controlPoint1X = p1.x + (p2.x - p0.x) / 6
+                    val controlPoint1Y = p1.y + (p2.y - p0.y) / 6
+                    val controlPoint2X = p2.x - (p3.x - p1.x) / 6
+                    val controlPoint2Y = p2.y - (p3.y - p1.y) / 6
+
+                    path.cubicTo(
+                        controlPoint1X, controlPoint1Y,
+                        controlPoint2X, controlPoint2Y,
+                        p2.x, p2.y
+                    )
+                }
+            }
+            canvas.drawPath(path, paint)
         }
     }
 
