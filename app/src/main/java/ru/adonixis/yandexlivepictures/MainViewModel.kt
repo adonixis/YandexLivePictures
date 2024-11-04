@@ -393,7 +393,7 @@ class MainViewModel : ViewModel() {
                     if (lastAction is DrawAction.DrawShape) {
                         val newHistory = currentFrame.actionHistory.toMutableList()
                         newHistory[currentFrame.currentHistoryPosition] = lastAction.copy(
-                            scale = action.scale.coerceIn(0.1f, 5f)
+                            scale = action.scale.coerceIn(0.1f, 2f)
                         )
                         
                         val updatedFrame = currentFrame.copy(
