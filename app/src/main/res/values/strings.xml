@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">Yandex Live Pictures</string>
+
+    <string name="ok">OK</string>
+    <string name="cancel">Отмена</string>
+
+    <string name="gif_error">Ошибка при сохранении GIF</string>
+    <string name="delete_all_frames">Удаление всех кадров</string>
+    <string name="all_frames_will_be_deleted">Все кадры будут удалены</string>
+    <string name="duplicate_frame">Дублирование кадра</string>
+    <string name="current_frame_will_be_deleted">Текущий кадр будет продублирован</string>
+    <string name="frames_generation">Генерация кадров</string>
+    <string name="frames_count">Количество кадров</string>
+    <string name="playback_speed">Скорость воспроизведения</string>
+    <string name="frames_per_seconds">Кадров в секунду (от 0 до %1$s)</string>
 </resources>

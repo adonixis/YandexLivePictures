@@ -79,6 +79,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.res.stringResource
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.White
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
@@ -289,12 +290,12 @@ fun MainScreen(
                         putExtra(Intent.EXTRA_STREAM, result.uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, "Share GIF"))
+                    context.startActivity(Intent.createChooser(shareIntent, ""))
                 }
                 is GifSavingResult.Error -> {
                     Toast.makeText(
                         context,
-                        "Ошибка при сохранении GIF: ${result.message}",
+                        "${context.getString(R.string.gif_error)}: ${result.message}",
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -328,7 +329,7 @@ fun MainScreen(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_left_24),
-                        contentDescription = "Undo icon",
+                        contentDescription = "Undo",
                         tint = if (state.frames[state.currentFrameIndex].currentHistoryPosition >= 0)
                             MaterialTheme.colorScheme.onSurface
                         else
@@ -345,7 +346,7 @@ fun MainScreen(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_right_24),
-                        contentDescription = "Redo icon",
+                        contentDescription = "Redo",
                         tint = if (state.frames[state.currentFrameIndex].currentHistoryPosition < 
                             state.frames[state.currentFrameIndex].actionHistory.size - 1)
                             MaterialTheme.colorScheme.onSurface
@@ -414,7 +415,7 @@ fun MainScreen(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_layers_32),
-                        contentDescription = "Layers icon",
+                        contentDescription = "Frames",
                         tint = if (state.isFrameListVisible)
                             MaterialTheme.colorScheme.primary
                         else
@@ -607,18 +608,25 @@ fun MainScreen(
                                             var currentRotation = 0f
                                             var previousAngle = 0f
                                             var isDragging = false
-                                            
+
                                             while (true) {
                                                 val event = awaitPointerEvent()
                                                 when (event.type) {
                                                     PointerEventType.Press -> {
                                                         isDragging = true
                                                         if (event.changes.size == 2) {
-                                                            val firstPoint = event.changes[0].position
-                                                            val secondPoint = event.changes[1].position
-                                                            initialDistance = firstPoint.getDistanceTo(secondPoint)
-                                                            val currentFrame = state.frames[state.currentFrameIndex]
-                                                            val lastAction = currentFrame.actionHistory.getOrNull(currentFrame.currentHistoryPosition)
+                                                            val firstPoint =
+                                                                event.changes[0].position
+                                                            val secondPoint =
+                                                                event.changes[1].position
+                                                            initialDistance =
+                                                                firstPoint.getDistanceTo(secondPoint)
+                                                            val currentFrame =
+                                                                state.frames[state.currentFrameIndex]
+                                                            val lastAction =
+                                                                currentFrame.actionHistory.getOrNull(
+                                                                    currentFrame.currentHistoryPosition
+                                                                )
                                                             if (lastAction is DrawAction.DrawShape) {
                                                                 initialScale = lastAction.scale
                                                             }
@@ -626,50 +634,79 @@ fun MainScreen(
                                                         previousAngle = 0f
                                                         viewModel.onAction(MainAction.HideFrameList)
                                                     }
-                                                    
+
                                                     PointerEventType.Move -> {
                                                         if (!state.isShapeMovable || !isDragging) continue
-                                                        
+
                                                         when (event.changes.size) {
                                                             1 -> {
-                                                                val position = event.changes.first().position
-                                                                viewModel.onAction(MainAction.UpdateShapePosition(position))
-                                                                event.changes.first().consume()
+                                                                val position =
+                                                                    event.changes.first().position
+                                                                viewModel.onAction(
+                                                                    MainAction.UpdateShapePosition(
+                                                                        position
+                                                                    )
+                                                                )
+                                                                event.changes
+                                                                    .first()
+                                                                    .consume()
                                                             }
+
                                                             2 -> {
-                                                                val firstPoint = event.changes[0].position
-                                                                val secondPoint = event.changes[1].position
-                                                                
+                                                                val firstPoint =
+                                                                    event.changes[0].position
+                                                                val secondPoint =
+                                                                    event.changes[1].position
+
                                                                 val center = Offset(
                                                                     (firstPoint.x + secondPoint.x) / 2f,
                                                                     (firstPoint.y + secondPoint.y) / 2f
                                                                 )
-                                                                viewModel.onAction(MainAction.UpdateShapePosition(center))
-                                                                
-                                                                val currentDistance = firstPoint.getDistanceTo(secondPoint)
+                                                                viewModel.onAction(
+                                                                    MainAction.UpdateShapePosition(
+                                                                        center
+                                                                    )
+                                                                )
+
+                                                                val currentDistance =
+                                                                    firstPoint.getDistanceTo(
+                                                                        secondPoint
+                                                                    )
                                                                 if (initialDistance > 0) {
-                                                                    val scaleFactor = currentDistance / initialDistance
-                                                                    val newScale = initialScale * scaleFactor
-                                                                    viewModel.onAction(MainAction.UpdateShapeScale(newScale))
+                                                                    val scaleFactor =
+                                                                        currentDistance / initialDistance
+                                                                    val newScale =
+                                                                        initialScale * scaleFactor
+                                                                    viewModel.onAction(
+                                                                        MainAction.UpdateShapeScale(
+                                                                            newScale
+                                                                        )
+                                                                    )
                                                                 }
-                                                                
+
                                                                 val angle = kotlin.math.atan2(
                                                                     secondPoint.y - firstPoint.y,
                                                                     secondPoint.x - firstPoint.x
                                                                 ) * 180f / kotlin.math.PI.toFloat()
-                                                                
+
                                                                 if (previousAngle != 0f) {
-                                                                    val deltaAngle = angle - previousAngle
-                                                                    currentRotation = (currentRotation + deltaAngle) % 360f
-                                                                    viewModel.onAction(MainAction.UpdateShapeRotation(currentRotation))
+                                                                    val deltaAngle =
+                                                                        angle - previousAngle
+                                                                    currentRotation =
+                                                                        (currentRotation + deltaAngle) % 360f
+                                                                    viewModel.onAction(
+                                                                        MainAction.UpdateShapeRotation(
+                                                                            currentRotation
+                                                                        )
+                                                                    )
                                                                 }
                                                                 previousAngle = angle
-                                                                
+
                                                                 event.changes.forEach { it.consume() }
                                                             }
                                                         }
                                                     }
-                                                    
+
                                                     PointerEventType.Release -> {
                                                         isDragging = false
                                                         if (event.changes.size == 2) {
@@ -1038,7 +1075,7 @@ fun MainScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_square_24),
-                                contentDescription = "Square icon"
+                                contentDescription = "Square"
                             )
                         }
 
@@ -1056,7 +1093,7 @@ fun MainScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_circle_24),
-                                contentDescription = "Circle icon"
+                                contentDescription = "Circle"
                             )
                         }
 
@@ -1074,7 +1111,7 @@ fun MainScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_triangle_24),
-                                contentDescription = "Triangle icon"
+                                contentDescription = "Triangle"
                             )
                         }
 
@@ -1092,7 +1129,7 @@ fun MainScreen(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_arrow_up_24),
-                                contentDescription = "Arrow up icon"
+                                contentDescription = "Arrow up"
                             )
                         }
 
@@ -1206,7 +1243,7 @@ fun MainScreen(
                             ) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_color_palette_32),
-                                    contentDescription = "Color palette icon",
+                                    contentDescription = "Color palette",
                                     tint = if (state.isExtendedColorsVisible)
                                         MaterialTheme.colorScheme.primary
                                     else
@@ -1402,7 +1439,7 @@ fun MainScreen(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_pencil_32),
-                    contentDescription = "Pencil icon",
+                    contentDescription = "Pencil",
                     tint = if (state.currentTool == Tool.PENCIL)
                         MaterialTheme.colorScheme.primary
                     else
@@ -1417,7 +1454,7 @@ fun MainScreen(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_brush_32),
-                    contentDescription = "Brush icon",
+                    contentDescription = "Brush",
                     tint = if (state.currentTool == Tool.BRUSH)
                         MaterialTheme.colorScheme.primary
                     else
@@ -1432,7 +1469,7 @@ fun MainScreen(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_erase_32),
-                    contentDescription = "Erase icon",
+                    contentDescription = "Erase",
                     tint = if (state.currentTool == Tool.ERASER)
                         MaterialTheme.colorScheme.primary
                     else
@@ -1447,7 +1484,7 @@ fun MainScreen(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_instruments_32),
-                    contentDescription = "Instruments icon",
+                    contentDescription = "Instruments",
                     tint = if (state.currentTool == Tool.SHAPES)
                         MaterialTheme.colorScheme.primary
                     else
@@ -1463,17 +1500,18 @@ fun MainScreen(
                 Box(
                     modifier = Modifier
                         .size(28.dp)
-                        .background(color = Color(state.selectedColor),
-                        shape = CircleShape
-                    )
-                    .border(
-                        width = 1.5.dp,
-                        color = if (state.currentTool == Tool.COLORS)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onBackground,
-                        shape = CircleShape
-                    ),
+                        .background(
+                            color = Color(state.selectedColor),
+                            shape = CircleShape
+                        )
+                        .border(
+                            width = 1.5.dp,
+                            color = if (state.currentTool == Tool.COLORS)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onBackground,
+                            shape = CircleShape
+                        ),
                 )
             }
         }
@@ -1482,20 +1520,20 @@ fun MainScreen(
     if (state.isDeleteAllDialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(MainAction.HideDeleteAllDialog) },
-            title = { Text("Удаление всех кадров") },
-            text = { Text("Все кадры будут удалены") },
+            title = { Text(stringResource(R.string.delete_all_frames)) },
+            text = { Text(stringResource(R.string.all_frames_will_be_deleted)) },
             confirmButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.DeleteAllFrames) }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.HideDeleteAllDialog) }
                 ) {
-                    Text("Отмена")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -1504,20 +1542,20 @@ fun MainScreen(
     if (state.isDuplicateFrameDialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(MainAction.HideDuplicateFrameDialog) },
-            title = { Text("Дублирование кадра") },
-            text = { Text("Текущий кадр будет продублирован") },
+            title = { Text(stringResource(R.string.duplicate_frame)) },
+            text = { Text(stringResource(R.string.current_frame_will_be_deleted)) },
             confirmButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.DuplicateCurrentFrame) }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.HideDuplicateFrameDialog) }
                 ) {
-                    Text("Отмена")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -1526,7 +1564,7 @@ fun MainScreen(
     if (state.isGenerateFramesDialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(MainAction.HideGenerateFramesDialog) },
-            title = { Text("Генерация кадров") },
+            title = { Text(stringResource(R.string.frames_generation)) },
             text = {
                 TextField(
                     value = frameCount,
@@ -1537,7 +1575,7 @@ fun MainScreen(
                             frameCount = text
                         }
                     },
-                    label = { Text("Количество кадров") },
+                    label = { Text(stringResource(R.string.frames_count)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             },
@@ -1551,14 +1589,14 @@ fun MainScreen(
                         }
                     }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.HideGenerateFramesDialog) }
                 ) {
-                    Text("Отмена")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -1567,7 +1605,7 @@ fun MainScreen(
     if (state.isPlaybackSpeedDialogVisible) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) },
-            title = { Text("Скорость воспроизведения") },
+            title = { Text(stringResource(R.string.playback_speed)) },
             text = {
                 TextField(
                     value = playbackSpeed,
@@ -1578,7 +1616,11 @@ fun MainScreen(
                             playbackSpeed = text
                         }
                     },
-                    label = { Text("Кадов в секунду (от 0 до ${ScreenConstants.MAX_FPS})") },
+                    label = { Text(
+                        stringResource(
+                            R.string.frames_per_seconds,
+                            ScreenConstants.MAX_FPS
+                        )) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             },
@@ -1592,14 +1634,14 @@ fun MainScreen(
                         }
                     }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) }
                 ) {
-                    Text("Отмена")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
