@@ -33,6 +33,17 @@ import androidx.core.content.FileProvider.getUriForFile
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 
+private object ViewModelConstants {
+    const val ANIMATION_QUALITY = 80
+    const val ANIMATION_REPEAT = 0
+    const val SHAPE_MIN_SCALE = 0.1f
+    const val SHAPE_MAX_SCALE = 2f
+    const val BOUNCING_BALL_DX = 30f
+    const val BOUNCING_BALL_DY = 20f
+    const val BALL_SIZE_RATIO = 0.1f
+    const val DEFAULT_FPS = 5
+}
+
 class MainViewModel : ViewModel() {
     private val _state = MutableStateFlow(MainState())
     val state: StateFlow<MainState> = _state.asStateFlow()
@@ -248,9 +259,9 @@ class MainViewModel : ViewModel() {
                     
                     var x = currentState.canvasSize.width / 2
                     var y = currentState.canvasSize.height / 2
-                    var dx = 30f
-                    var dy = 20f
-                    val radius = minOf(currentState.canvasSize.width, currentState.canvasSize.height) * 0.1f
+                    var dx = ViewModelConstants.BOUNCING_BALL_DX
+                    var dy = ViewModelConstants.BOUNCING_BALL_DY
+                    val radius = minOf(currentState.canvasSize.width, currentState.canvasSize.height) * ViewModelConstants.BALL_SIZE_RATIO
                     
                     repeat(action.count) {
                         x += dx
@@ -393,7 +404,7 @@ class MainViewModel : ViewModel() {
                     if (lastAction is DrawAction.DrawShape) {
                         val newHistory = currentFrame.actionHistory.toMutableList()
                         newHistory[currentFrame.currentHistoryPosition] = lastAction.copy(
-                            scale = action.scale.coerceIn(0.1f, 2f)
+                            scale = action.scale.coerceIn(ViewModelConstants.SHAPE_MIN_SCALE, ViewModelConstants.SHAPE_MAX_SCALE)
                         )
                         
                         val updatedFrame = currentFrame.copy(
@@ -589,7 +600,7 @@ class MainViewModel : ViewModel() {
                             withContext(Dispatchers.IO) {
                                 val file = File(framesDir, "frame_$index.png")
                                 FileOutputStream(file).use { out ->
-                                    scaledBitmap.compress(Bitmap.CompressFormat.PNG, 80, out)
+                                    scaledBitmap.compress(Bitmap.CompressFormat.PNG, ViewModelConstants.ANIMATION_QUALITY, out)
                                 }
                                 scaledBitmap.recycle()
                                 file.absolutePath
@@ -605,7 +616,7 @@ class MainViewModel : ViewModel() {
                     val encoder = AnimatedGifEncoder()
                     encoder.start(gifFile.absolutePath)
                     encoder.setDelay(1000 / state.value.playbackFps)
-                    encoder.setRepeat(0)
+                    encoder.setRepeat(ViewModelConstants.ANIMATION_REPEAT)
                     
                     framePaths.forEach { path ->
                         val bitmap = BitmapFactory.decodeFile(path)
@@ -831,7 +842,7 @@ data class MainState(
     val isDeleteAllDialogVisible: Boolean = false,
     val isDuplicateFrameDialogVisible: Boolean = false,
     val isPlaybackSpeedDialogVisible: Boolean = false,
-    val playbackFps: Int = 5,
+    val playbackFps: Int = ViewModelConstants.DEFAULT_FPS,
     val isSavingGif: Boolean = false,
     val gifSavingResult: GifSavingResult? = null,
     val isFrameListVisible: Boolean = false,

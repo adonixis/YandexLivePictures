@@ -85,6 +85,16 @@ import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import kotlin.math.ceil
 import kotlin.math.min
 
+private object ScreenConstants {
+    const val ANIMATION_DURATION = 200
+    const val ALPHA_SEMI_TRANSPARENT = 0.8f
+    const val ALPHA_BORDER = 0.16f
+    const val MAX_FPS = 1000
+    const val SLIDER_MIN = 2f
+    const val SLIDER_MAX = 100f
+    const val THUMBNAIL_HEIGHT = 100f
+}
+
 private fun Path.drawSmoothLine(points: List<Offset>) {
     if (points.size > 1) {
         moveTo(points.first().x, points.first().y)
@@ -262,7 +272,7 @@ fun MainScreen(
                 pencilWidth = 2.dp.toPx(),
                 brushWidth = 20.dp.toPx(),
                 eraserWidth = 20.dp.toPx(),
-                thumbnailHeight = 100.dp.toPx()
+                thumbnailHeight = ScreenConstants.THUMBNAIL_HEIGHT.dp.toPx()
             )
         }
     }
@@ -340,20 +350,20 @@ fun MainScreen(
                     onValueChange = { text ->
                         if (text.isEmpty()) {
                             playbackSpeed = ""
-                        } else if (((text.toIntOrNull() ?: 0) > 0) && ((text.toIntOrNull() ?: 0) <= 1000)) {
+                        } else if (((text.toIntOrNull() ?: 0) > 0) && ((text.toIntOrNull() ?: 0) <= ScreenConstants.MAX_FPS)) {
                             playbackSpeed = text
                         }
                     },
-                    label = { Text("Кадов в секунду (от 0 до 1000)") },
+                    label = { Text("Кадов в секунду (от 0 до ${ScreenConstants.MAX_FPS})") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             },
             confirmButton = {
                 TextButton(
-                    enabled = ((playbackSpeed.toIntOrNull() ?: 0) > 0) && ((playbackSpeed.toIntOrNull() ?: 0) <= 1000),
+                    enabled = ((playbackSpeed.toIntOrNull() ?: 0) > 0) && ((playbackSpeed.toIntOrNull() ?: 0) <= ScreenConstants.MAX_FPS),
                     onClick = {
                         playbackSpeed.toIntOrNull()?.let {
-                            if (it in 1..1000)
+                            if (it in 1..ScreenConstants.MAX_FPS)
                                 viewModel.onAction(MainAction.UpdatePlaybackSpeed(it))
                         }
                     }
@@ -944,8 +954,8 @@ fun MainScreen(
                 // Панель с кадрами
                 this@Column.AnimatedVisibility(
                     visible = state.isFrameListVisible,
-                    enter = fadeIn(animationSpec = tween(durationMillis = 200)),
-                    exit = fadeOut(animationSpec = tween(durationMillis = 200)),
+                    enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
                     modifier = Modifier.align(Alignment.TopCenter)
                 ) {
                     Box(
@@ -953,12 +963,12 @@ fun MainScreen(
                             .padding(top = 16.dp, start = 16.dp, end = 16.dp)
                             .clickable(enabled = false) { }
                             .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
                                 width = 1.dp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(12.dp)
@@ -988,7 +998,7 @@ fun MainScreen(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .height(100.dp)
+                                            .height(ScreenConstants.THUMBNAIL_HEIGHT.dp)
                                             .aspectRatio(
                                                 state.canvasSize.width / state.canvasSize.height
                                             )
@@ -1004,7 +1014,7 @@ fun MainScreen(
                                                 color = if (index == state.currentFrameIndex)
                                                     MaterialTheme.colorScheme.primary
                                                 else
-                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
                                                 shape = RoundedCornerShape(4.dp)
                                             )
                                             .clickable {
@@ -1082,10 +1092,10 @@ fun MainScreen(
                 this@Column.AnimatedVisibility(
                     visible = state.currentTool == Tool.SHAPES,
                     enter = fadeIn(
-                        animationSpec = tween(durationMillis = 200)
+                        animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
                     ),
                     exit = fadeOut(
-                        animationSpec = tween(durationMillis = 200)
+                        animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
                     ),
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
@@ -1094,12 +1104,12 @@ fun MainScreen(
                             .padding(bottom = 16.dp)
                             .clickable(enabled = false) { }
                             .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
                                 width = 1.dp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(12.dp),
@@ -1201,21 +1211,21 @@ fun MainScreen(
                     AnimatedVisibility(
                         visible = state.isExtendedColorsVisible,
                         enter = fadeIn(
-                            animationSpec = tween(durationMillis = 200)
+                            animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
                         ),
                         exit = fadeOut(
-                            animationSpec = tween(durationMillis = 200)
+                            animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
                         )
                     ) {
                         Column(
                             modifier = Modifier
                                 .background(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .border(
                                     width = 1.dp,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .padding(16.dp),
@@ -1262,22 +1272,22 @@ fun MainScreen(
                     AnimatedVisibility(
                         visible = state.currentTool == Tool.COLORS,
                         enter = fadeIn(
-                            animationSpec = tween(durationMillis = 200)
+                            animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
                         ),
                         exit = fadeOut(
-                            animationSpec = tween(durationMillis = 200)
+                            animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
                         )
                     ) {
                         Row(
                             modifier = Modifier
                                 .padding(bottom = 16.dp)
                                 .background(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .border(
                                     width = 1.dp,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .padding(16.dp),
@@ -1400,8 +1410,8 @@ fun MainScreen(
                 // Панель со слайдером ластика
                 this@Column.AnimatedVisibility(
                     visible = state.isEraserWidthSliderVisible,
-                    enter = fadeIn(animationSpec = tween(durationMillis = 200)),
-                    exit = fadeOut(animationSpec = tween(durationMillis = 200)),
+                    enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     Box(
@@ -1409,12 +1419,12 @@ fun MainScreen(
                             .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
                             .clickable(enabled = false) { }
                             .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
                                 width = 1.dp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(16.dp)
@@ -1427,7 +1437,7 @@ fun MainScreen(
                                     viewModel.onAction(MainAction.UpdateEraserWidth(dpValue.dp.toPx()))
                                 }
                             },
-                            valueRange = 2f..100f,
+                            valueRange = ScreenConstants.SLIDER_MIN..ScreenConstants.SLIDER_MAX,
                             thumb = { SliderThumb() },
                             track = { SliderTrack() }
                         )
@@ -1437,8 +1447,8 @@ fun MainScreen(
                 // Панель со слайдером кисти
                 this@Column.AnimatedVisibility(
                     visible = state.isBrushWidthSliderVisible,
-                    enter = fadeIn(animationSpec = tween(durationMillis = 200)),
-                    exit = fadeOut(animationSpec = tween(durationMillis = 200)),
+                    enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     Box(
@@ -1446,12 +1456,12 @@ fun MainScreen(
                             .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
                             .clickable(enabled = false) { }
                             .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
                                 width = 1.dp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(16.dp)
@@ -1464,7 +1474,7 @@ fun MainScreen(
                                     viewModel.onAction(MainAction.UpdateBrushWidth(dpValue.dp.toPx()))
                                 }
                             },
-                            valueRange = 2f..100f,
+                            valueRange = ScreenConstants.SLIDER_MIN..ScreenConstants.SLIDER_MAX,
                             thumb = { SliderThumb() },
                             track = { SliderTrack() }
                         )
@@ -1610,20 +1620,6 @@ fun MainScreen(
         )
     }
 
-    // Добавляем индикатор прогресса
-    if (state.isSavingGif) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-
     if (state.isSavingGif) {
         Box(
             modifier = Modifier
@@ -1646,17 +1642,16 @@ fun MainScreen(
     }
 }
 
+private fun Offset.getDistanceTo(other: Offset): Float {
+    val dx = x - other.x
+    val dy = y - other.y
+    return kotlin.math.sqrt(dx * dx + dy * dy)
+}
+
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
     YandexLivePicturesTheme {
         MainScreen()
     }
-}
-
-// Вспомогательная функция для вычисления расстояния между точками
-private fun Offset.getDistanceTo(other: Offset): Float {
-    val dx = x - other.x
-    val dy = y - other.y
-    return kotlin.math.sqrt(dx * dx + dy * dy)
 }
