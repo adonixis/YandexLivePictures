@@ -676,8 +676,8 @@ fun MainScreen(
 
                                     Tool.SHAPES -> {
                                         awaitPointerEventScope {
-                                            var currentScale = 1f
-                                            var previousDistance = 0f
+                                            var initialDistance = 0f
+                                            var initialScale = 1f
                                             var currentRotation = 0f
                                             var previousAngle = 0f
                                             
@@ -686,7 +686,17 @@ fun MainScreen(
                                                 when (event.type) {
                                                     PointerEventType.Press -> {
                                                         // Сбрасываем значения при новом касании
-                                                        previousDistance = 0f
+                                                        if (event.changes.size == 2) {
+                                                            val firstPoint = event.changes[0].position
+                                                            val secondPoint = event.changes[1].position
+                                                            initialDistance = firstPoint.getDistanceTo(secondPoint)
+                                                            // Запоминаем текущий масштаб фигуры при начале жеста
+                                                            val currentFrame = state.frames[state.currentFrameIndex]
+                                                            val lastAction = currentFrame.actionHistory.getOrNull(currentFrame.currentHistoryPosition)
+                                                            if (lastAction is DrawAction.DrawShape) {
+                                                                initialScale = lastAction.scale
+                                                            }
+                                                        }
                                                         previousAngle = 0f
                                                     }
                                                     
@@ -710,12 +720,11 @@ fun MainScreen(
                                                                 viewModel.onAction(MainAction.UpdateShapePosition(center))
                                                                 
                                                                 val currentDistance = firstPoint.getDistanceTo(secondPoint)
-                                                                if (previousDistance > 0) {
-                                                                    val scaleFactor = currentDistance / previousDistance
-                                                                    currentScale *= scaleFactor
-                                                                    viewModel.onAction(MainAction.UpdateShapeScale(currentScale))
+                                                                if (initialDistance > 0) {
+                                                                    val scaleFactor = currentDistance / initialDistance
+                                                                    val newScale = initialScale * scaleFactor
+                                                                    viewModel.onAction(MainAction.UpdateShapeScale(newScale))
                                                                 }
-                                                                previousDistance = currentDistance
                                                                 
                                                                 val angle = kotlin.math.atan2(
                                                                     secondPoint.y - firstPoint.y,
@@ -737,7 +746,7 @@ fun MainScreen(
                                                     PointerEventType.Release -> {
                                                         when (event.changes.size) {
                                                             2 -> {
-                                                                previousDistance = 0f
+                                                                initialDistance = 0f
                                                                 previousAngle = 0f
                                                             }
                                                         }
