@@ -13,7 +13,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
@@ -76,7 +75,7 @@ import ru.adonixis.yandexlivepictures.components.dialog.DeleteAllFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.DuplicateFrameDialog
 import ru.adonixis.yandexlivepictures.components.dialog.GenerateFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.PlaybackSpeedDialog
-import ru.adonixis.yandexlivepictures.components.panel.WidthSlider
+import ru.adonixis.yandexlivepictures.components.WidthSlider
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawArrow
@@ -87,6 +86,7 @@ import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawTriangle
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.getDistanceTo
 import kotlin.math.ceil
 import kotlin.math.min
+import ru.adonixis.yandexlivepictures.components.TopActionBar
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -189,181 +189,11 @@ fun MainScreen(
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            modifier = Modifier
-                .padding(top = 14.dp)
-                .fillMaxWidth()
-                .height(36.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.alpha(if (state.isPlaybackActive) 0f else 1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                IconButton(
-                    modifier = Modifier.size(24.dp),
-                    onClick = { viewModel.onAction(MainAction.Undo) },
-                    enabled = !state.isPlaybackActive && state.frames[state.currentFrameIndex].currentHistoryPosition >= 0
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_arrow_left_24),
-                        contentDescription = "Undo",
-                        tint = if (state.frames[state.currentFrameIndex].currentHistoryPosition >= 0)
-                            MaterialTheme.colorScheme.onSurface
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                IconButton(
-                    modifier = Modifier.size(24.dp),
-                    onClick = { viewModel.onAction(MainAction.Redo) },
-                    enabled = !state.isPlaybackActive && 
-                        state.frames[state.currentFrameIndex].currentHistoryPosition < 
-                        state.frames[state.currentFrameIndex].actionHistory.size - 1
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_arrow_right_24),
-                        contentDescription = "Redo",
-                        tint = if (state.frames[state.currentFrameIndex].currentHistoryPosition < 
-                            state.frames[state.currentFrameIndex].actionHistory.size - 1)
-                            MaterialTheme.colorScheme.onSurface
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.alpha(if (state.isPlaybackActive) 0f else 1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .combinedClickable(
-                            enabled = !state.isPlaybackActive,
-                            onClick = {
-                                viewModel.onAction(MainAction.DeleteCurrentFrame)
-                            },
-                            onLongClick = {
-                                viewModel.onAction(MainAction.ShowDeleteAllDialog)
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_bin_32),
-                        contentDescription = "Delete current frame"
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .combinedClickable(
-                            enabled = !state.isPlaybackActive,
-                            onClick = {
-                                viewModel.onAction(MainAction.AddNewFrame)
-                            },
-                            onLongClick = {
-                                viewModel.onAction(MainAction.ShowDuplicateFrameDialog)
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_file_plus_32),
-                        contentDescription = "Add new frame"
-                    )
-                }
-
-                IconButton(
-                    modifier = Modifier.size(36.dp),
-                    onClick = {
-                        if (state.isFrameListVisible)
-                            viewModel.onAction(MainAction.HideFrameList)
-                        else
-                            viewModel.onAction(MainAction.ShowFrameList)
-                    },
-                    enabled = !state.isPlaybackActive
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_layers_32),
-                        contentDescription = "Frames",
-                        tint = if (state.isFrameListVisible)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                if (state.isPlaybackActive) {
-                    IconButton(
-                        modifier = Modifier.size(36.dp),
-                        onClick = {
-                            viewModel.onAction(MainAction.StopPlayback)
-                            viewModel.onAction(MainAction.SaveAsGif(context))
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_save_32),
-                            contentDescription = "Save as GIF"
-                        )
-                    }
-                }
-
-                IconButton(
-                    modifier = Modifier.size(36.dp),
-                    onClick = { viewModel.onAction(MainAction.StopPlayback) },
-                    enabled = state.isPlaybackActive
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_stop_32),
-                        contentDescription = "Stop playback",
-                        tint = if (state.isPlaybackActive)
-                            MaterialTheme.colorScheme.onSurface
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .combinedClickable(
-                            enabled = !state.isPlaybackActive,
-                            onClick = {
-                                viewModel.onAction(MainAction.StartPlayback)
-                            },
-                            onLongClick = {
-                                viewModel.onAction(MainAction.ShowPlaybackSpeedDialog)
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_play_32),
-                        contentDescription = "Start playback",
-                        tint = if (!state.isPlaybackActive)
-                            MaterialTheme.colorScheme.onSurface
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
+        TopActionBar(
+            state = state,
+            onAction = viewModel::onAction,
+            context = context
+        )
 
         Box(
             modifier = Modifier
