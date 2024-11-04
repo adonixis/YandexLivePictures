@@ -87,6 +87,7 @@ import ru.adonixis.yandexlivepictures.utils.UiExtensions.getDistanceTo
 import kotlin.math.ceil
 import kotlin.math.min
 import ru.adonixis.yandexlivepictures.components.TopActionBar
+import ru.adonixis.yandexlivepictures.components.BottomToolBar
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -102,7 +103,6 @@ private object ScreenConstants {
     const val CANVAS_SCALE_MAX = 5f
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
@@ -1142,112 +1142,10 @@ fun MainScreen(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .padding(bottom = 14.dp)
-                .height(36.dp)
-                .alpha(if (state.isPlaybackActive) 0f else 1f),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.PENCIL)) },
-                enabled = !state.isPlaybackActive
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_pencil_32),
-                    contentDescription = "Pencil",
-                    tint = if (state.currentTool == Tool.PENCIL)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            IconButton(
-                modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.BRUSH)) },
-                enabled = !state.isPlaybackActive
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_brush_32),
-                    contentDescription = "Brush",
-                    tint = if (state.currentTool == Tool.BRUSH)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            IconButton(
-                modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.ERASER)) },
-                enabled = !state.isPlaybackActive
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_erase_32),
-                    contentDescription = "Erase",
-                    tint = if (state.currentTool == Tool.ERASER)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            IconButton(
-                modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.SHAPES)) },
-                enabled = !state.isPlaybackActive
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_instruments_32),
-                    contentDescription = "Instruments",
-                    tint = if (state.currentTool == Tool.SHAPES)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            IconButton(
-                modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.COLORS)) },
-                enabled = !state.isPlaybackActive
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .background(
-                            color = Color(state.selectedColor),
-                            shape = CircleShape
-                        )
-                        .border(
-                            width = 1.5.dp,
-                            color = if (state.currentTool == Tool.COLORS)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onBackground,
-                            shape = CircleShape
-                        ),
-                )
-            }
-
-            IconButton(
-                modifier = Modifier.size(36.dp),
-                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.ZOOM)) },
-                enabled = !state.isPlaybackActive
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_zoom_32),
-                    contentDescription = "Zoom",
-                    tint = if (state.currentTool == Tool.ZOOM)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
+        BottomToolBar(
+            state = state,
+            onAction = viewModel::onAction
+        )
     }
 
     if (state.isDeleteAllDialogVisible) {
