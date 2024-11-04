@@ -85,6 +85,7 @@ import ru.adonixis.yandexlivepictures.components.BottomToolBar
 import ru.adonixis.yandexlivepictures.components.panel.ColorPanel
 import ru.adonixis.yandexlivepictures.components.panel.WidthSliderPanel
 import ru.adonixis.yandexlivepictures.components.panel.ShapePanel
+import ru.adonixis.yandexlivepictures.components.panel.FrameListPanel
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -627,141 +628,30 @@ fun MainScreen(
             }
 
             if (!state.isPlaybackActive) {
-                this@Column.AnimatedVisibility(
-                    visible = state.isFrameListVisible,
-                    enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
-                    exit = fadeOut(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
-                    modifier = Modifier.align(Alignment.TopCenter)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-                            .clickable(enabled = false) { }
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(12.dp)
-                    ) {
-                        val listState = rememberLazyListState()
-
-                        LaunchedEffect(state.isFrameListVisible, state.currentFrameIndex) {
-                            if (state.isFrameListVisible) {
-                                val isItemVisible = listState.layoutInfo.visibleItemsInfo.any { 
-                                    it.index == state.currentFrameIndex 
-                                }
-
-                                if (!isItemVisible) {
-                                    listState.animateScrollToItem(state.currentFrameIndex)
-                                }
-                            }
-                        }
-
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            state = listState
-                        ) {
-                            items(state.frames.indices.toList()) { index ->
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .height(ScreenConstants.THUMBNAIL_HEIGHT.dp)
-                                            .aspectRatio(
-                                                state.canvasSize.width / state.canvasSize.height
-                                            )
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(
-                                                color = if (index == state.currentFrameIndex)
-                                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                                else
-                                                    MaterialTheme.colorScheme.surface
-                                            )
-                                            .border(
-                                                width = 1.dp,
-                                                color = if (index == state.currentFrameIndex)
-                                                    MaterialTheme.colorScheme.primary
-                                                else
-                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
-                                                shape = RoundedCornerShape(4.dp)
-                                            )
-                                            .clickable {
-                                                viewModel.onAction(MainAction.SelectFrame(index))
-                                            },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        state.frames[index].thumbnail?.let { thumbnail ->
-                                            Image(
-                                                bitmap = thumbnail,
-                                                contentDescription = "Frame thumbnail",
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentScale = ContentScale.Fit
-                                            )
-                                        }
-
-                                        Box(
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                                .padding(4.dp)
-                                                .padding(horizontal = 4.dp, vertical = 2.dp)
-                                        ) {
-                                            Text(
-                                                text = "${index + 1}",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = if (index == state.currentFrameIndex)
-                                                    MaterialTheme.colorScheme.primary
-                                                else
-                                                    Color.Black
-                                            )
-                                        }
-                                    }
-
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        IconButton(
-                                            modifier = Modifier.size(24.dp),
-                                            onClick = {
-                                                viewModel.onAction(MainAction.SelectFrame(index))
-                                                viewModel.onAction(MainAction.DuplicateCurrentFrame)
-                                            }
-                                        ) {
-                                            Icon(
-                                                modifier = Modifier.size(16.dp),
-                                                painter = painterResource(id = R.drawable.ic_duplicate_24),
-                                                contentDescription = "Duplicate frame",
-                                                tint = Black
-                                            )
-                                        }
-
-                                        IconButton(
-                                            modifier = Modifier.size(24.dp),
-                                            onClick = {
-                                                viewModel.onAction(MainAction.SelectFrame(index))
-                                                viewModel.onAction(MainAction.DeleteCurrentFrame)
-                                            }
-                                        ) {
-                                            Icon(
-                                                modifier = Modifier.size(16.dp),
-                                                painter = painterResource(id = R.drawable.ic_bin_32),
-                                                contentDescription = "Delete frame",
-                                                tint = Black
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                FrameListPanel(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+                    isVisible = state.isFrameListVisible,
+                    currentFrameIndex = state.currentFrameIndex,
+                    frames = state.frames,
+                    canvasSize = canvasSize,
+                    thumbnailHeight = ScreenConstants.THUMBNAIL_HEIGHT.dp,
+                    animationDurationMillis = ScreenConstants.ANIMATION_DURATION,
+                    alphaBackground = ScreenConstants.ALPHA_SEMI_TRANSPARENT,
+                    alphaBorder = ScreenConstants.ALPHA_BORDER,
+                    onFrameSelected = { index ->
+                        viewModel.onAction(MainAction.SelectFrame(index))
+                    },
+                    onFrameDuplicated = { index ->
+                        viewModel.onAction(MainAction.SelectFrame(index))
+                        viewModel.onAction(MainAction.DuplicateCurrentFrame)
+                    },
+                    onFrameDeleted = { index ->
+                        viewModel.onAction(MainAction.SelectFrame(index))
+                        viewModel.onAction(MainAction.DeleteCurrentFrame)
                     }
-                }
+                )
 
                 ShapePanel(
                     modifier = Modifier
