@@ -26,17 +26,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -70,7 +65,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
@@ -79,7 +73,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.res.stringResource
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.White
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
@@ -89,6 +82,11 @@ import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.graphics.graphicsLayer
+import ru.adonixis.yandexlivepictures.components.dialog.DeleteAllFramesDialog
+import ru.adonixis.yandexlivepictures.components.dialog.DuplicateFrameDialog
+import ru.adonixis.yandexlivepictures.components.dialog.GenerateFramesDialog
+import ru.adonixis.yandexlivepictures.components.dialog.PlaybackSpeedDialog
+import ru.adonixis.yandexlivepictures.components.panel.ProgressIndicator
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -283,10 +281,10 @@ fun MainScreen(
     val transformableState = rememberTransformableState { zoomChange, offsetChange, _ ->
         if (state.currentTool == Tool.ZOOM) {
             val newScale = (scale * zoomChange).coerceIn(ScreenConstants.CANVAS_SCALE_MIN, ScreenConstants.CANVAS_SCALE_MAX)
-            
+
             val maxX = (canvasSize.width * (newScale - 1)) / 2
             val maxY = (canvasSize.height * (newScale - 1)) / 2
-            
+
             val newOffsetX = (offset.x + offsetChange.x).coerceIn(-maxX, maxX)
             val newOffsetY = (offset.y + offsetChange.y).coerceIn(-maxY, maxY)
             
@@ -1585,154 +1583,32 @@ fun MainScreen(
     }
 
     if (state.isDeleteAllDialogVisible) {
-        AlertDialog(
-            onDismissRequest = { viewModel.onAction(MainAction.HideDeleteAllDialog) },
-            title = { Text(stringResource(R.string.delete_all_frames)) },
-            text = { Text(stringResource(R.string.all_frames_will_be_deleted)) },
-            confirmButton = {
-                TextButton(
-                    onClick = { viewModel.onAction(MainAction.DeleteAllFrames) }
-                ) {
-                    Text(stringResource(R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.onAction(MainAction.HideDeleteAllDialog) }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
+        DeleteAllFramesDialog(onAction = viewModel::onAction)
     }
 
     if (state.isDuplicateFrameDialogVisible) {
-        AlertDialog(
-            onDismissRequest = { viewModel.onAction(MainAction.HideDuplicateFrameDialog) },
-            title = { Text(stringResource(R.string.duplicate_frame)) },
-            text = { Text(stringResource(R.string.current_frame_will_be_deleted)) },
-            confirmButton = {
-                TextButton(
-                    onClick = { viewModel.onAction(MainAction.DuplicateCurrentFrame) }
-                ) {
-                    Text(stringResource(R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.onAction(MainAction.HideDuplicateFrameDialog) }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
-        )
+        DuplicateFrameDialog(onAction = viewModel::onAction)
     }
 
     if (state.isGenerateFramesDialogVisible) {
-        AlertDialog(
-            onDismissRequest = { viewModel.onAction(MainAction.HideGenerateFramesDialog) },
-            title = { Text(stringResource(R.string.frames_generation)) },
-            text = {
-                TextField(
-                    value = frameCount,
-                    onValueChange = { text ->
-                        if (text.isEmpty()) {
-                            frameCount = ""
-                        } else if ((text.toIntOrNull() ?: 0) > 0) {
-                            frameCount = text
-                        }
-                    },
-                    label = { Text(stringResource(R.string.frames_count)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = (frameCount.toIntOrNull() ?: 0) > 0,
-                    onClick = {
-                        frameCount.toIntOrNull()?.let {
-                            if (it > 0)
-                                viewModel.onAction(MainAction.GenerateBouncingBallFrames(it))
-                        }
-                    }
-                ) {
-                    Text(stringResource(R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.onAction(MainAction.HideGenerateFramesDialog) }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
+        GenerateFramesDialog(
+            frameCount = frameCount,
+            onFrameCountChange = { frameCount = it },
+            onAction = viewModel::onAction
         )
     }
 
     if (state.isPlaybackSpeedDialogVisible) {
-        AlertDialog(
-            onDismissRequest = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) },
-            title = { Text(stringResource(R.string.playback_speed)) },
-            text = {
-                TextField(
-                    value = playbackSpeed,
-                    onValueChange = { text ->
-                        if (text.isEmpty()) {
-                            playbackSpeed = ""
-                        } else if (((text.toIntOrNull() ?: 0) > 0) && ((text.toIntOrNull() ?: 0) <= ScreenConstants.MAX_FPS)) {
-                            playbackSpeed = text
-                        }
-                    },
-                    label = { Text(
-                        stringResource(
-                            R.string.frames_per_seconds,
-                            ScreenConstants.MAX_FPS
-                        )) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = ((playbackSpeed.toIntOrNull() ?: 0) > 0) && ((playbackSpeed.toIntOrNull() ?: 0) <= ScreenConstants.MAX_FPS),
-                    onClick = {
-                        playbackSpeed.toIntOrNull()?.let {
-                            if (it in 1..ScreenConstants.MAX_FPS)
-                                viewModel.onAction(MainAction.UpdatePlaybackSpeed(it))
-                        }
-                    }
-                ) {
-                    Text(stringResource(R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
+        PlaybackSpeedDialog(
+            maxFps = ScreenConstants.MAX_FPS,
+            playbackSpeed = playbackSpeed,
+            onPlaybackSpeedChange = { playbackSpeed = it },
+            onAction = viewModel::onAction
         )
     }
 
     if (state.isSavingGif) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(enabled = false) { }
-                .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            awaitPointerEvent().changes.forEach { it.consume() }
-                        }
-                    }
-                }
-                .background(Color.Black.copy(alpha = 0.5f)),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+        ProgressIndicator()
     }
 }
 
