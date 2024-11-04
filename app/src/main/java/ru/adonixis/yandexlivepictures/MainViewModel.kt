@@ -604,21 +604,14 @@ class MainViewModel : ViewModel() {
             return null
         }
         
-        val aspectRatio = state.value.canvasSize.width / state.value.canvasSize.height
-        val width = (height * aspectRatio).toInt()
-        
-        if (width <= 0 || height <= 0) {
-            return null
-        }
-        
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
+        val fullBitmap = Bitmap.createBitmap(
+            state.value.canvasSize.width.toInt(),
+            state.value.canvasSize.height.toInt(),
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(fullBitmap)
         
         canvas.drawColor(android.graphics.Color.WHITE)
-        
-        val scale = height.toFloat() / state.value.canvasSize.height
-        
-        canvas.scale(scale, scale)
         
         frame.actionHistory.take(frame.currentHistoryPosition + 1).forEach { action ->
             when (action) {
@@ -689,7 +682,18 @@ class MainViewModel : ViewModel() {
             }
         }
         
-        return bitmap.asImageBitmap()
+        val aspectRatio = state.value.canvasSize.width / state.value.canvasSize.height
+        val width = (height * aspectRatio).toInt()
+        
+        if (width <= 0 || height <= 0) {
+            fullBitmap.recycle()
+            return null
+        }
+        
+        val scaledBitmap = Bitmap.createScaledBitmap(fullBitmap, width, height, true)
+        fullBitmap.recycle()
+        
+        return scaledBitmap.asImageBitmap()
     }
 
     private fun updateThumbnails() {
