@@ -697,13 +697,12 @@ class MainViewModel : ViewModel() {
 
     private fun updateThumbnails() {
         viewModelScope.launch(Dispatchers.Default) {
-            val newThumbnails = state.value.frames.mapIndexed { index, frame ->
-                generateThumbnail(frame, state.value.thumbnailHeight.toInt())?.let {
-                    index to it
-                }
-            }.filterNotNull().toMap()
-            
-            _state.update { it.copy(thumbnails = newThumbnails) }
+            val newFrames = state.value.frames.map { frame ->
+                frame.copy(
+                    thumbnail = generateThumbnail(frame, state.value.thumbnailHeight.toInt())
+                )
+            }
+            _state.update { it.copy(frames = newFrames) }
         }
     }
 }
@@ -732,12 +731,12 @@ data class MainState(
     val eraserWidth: Float = 0f,
     val brushWidth: Float = 0f,
     val thumbnailHeight: Float = 0f,
-    val thumbnails: Map<Int, ImageBitmap> = emptyMap()
 )
 
 data class Frame(
     val actionHistory: List<DrawAction> = emptyList(),
-    val currentHistoryPosition: Int = -1
+    val currentHistoryPosition: Int = -1,
+    val thumbnail: ImageBitmap? = null
 )
 
 sealed interface MainAction {

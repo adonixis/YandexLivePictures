@@ -917,7 +917,7 @@ fun MainScreen(
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        state.thumbnails[index]?.let { thumbnail ->
+                                        state.frames[index].thumbnail?.let { thumbnail ->
                                             Image(
                                                 bitmap = thumbnail,
                                                 contentDescription = "Frame thumbnail",
