@@ -84,6 +84,7 @@ import ru.adonixis.yandexlivepictures.components.TopActionBar
 import ru.adonixis.yandexlivepictures.components.BottomToolBar
 import ru.adonixis.yandexlivepictures.components.panel.ColorPanel
 import ru.adonixis.yandexlivepictures.components.panel.WidthSliderPanel
+import ru.adonixis.yandexlivepictures.components.panel.ShapePanel
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -762,116 +763,54 @@ fun MainScreen(
                     }
                 }
 
-                this@Column.AnimatedVisibility(
-                    visible = state.currentTool == Tool.SHAPES,
-                    enter = fadeIn(
-                        animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
-                    ),
-                    exit = fadeOut(
-                        animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
-                    ),
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(bottom = 16.dp)
-                            .clickable(enabled = false) { }
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
-                                shape = RoundedCornerShape(4.dp)
+                ShapePanel(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp),
+                    isVisible = state.currentTool == Tool.SHAPES,
+                    animationDurationMillis = ScreenConstants.ANIMATION_DURATION,
+                    alphaBackground = ScreenConstants.ALPHA_SEMI_TRANSPARENT,
+                    alphaBorder = ScreenConstants.ALPHA_BORDER,
+                    onSquareClick = {
+                        viewModel.onAction(
+                            MainAction.AddShape(
+                                shape = Shape.Square,
+                                center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                size = min(canvasSize.width, canvasSize.height) * 0.8f
                             )
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
-                                shape = RoundedCornerShape(4.dp)
+                        )
+                    },
+                    onCircleClick = {
+                        viewModel.onAction(
+                            MainAction.AddShape(
+                                shape = Shape.Circle,
+                                center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                size = min(canvasSize.width, canvasSize.height) * 0.8f
                             )
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(
-                                    MainAction.AddShape(
-                                        shape = Shape.Square,
-                                        center = Offset(canvasSize.width / 2, canvasSize.height / 2),
-                                        size = min(canvasSize.width, canvasSize.height) * 0.8f
-                                    )
-                                )
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_square_24),
-                                contentDescription = "Square"
+                        )
+                    },
+                    onTriangleClick = {
+                        viewModel.onAction(
+                            MainAction.AddShape(
+                                shape = Shape.Triangle,
+                                center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                size = min(canvasSize.width, canvasSize.height) * 0.8f
                             )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(
-                                    MainAction.AddShape(
-                                        shape = Shape.Circle,
-                                        center = Offset(canvasSize.width / 2, canvasSize.height / 2),
-                                        size = min(canvasSize.width, canvasSize.height) * 0.8f
-                                    )
-                                )
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_circle_24),
-                                contentDescription = "Circle"
+                        )
+                    },
+                    onArrowClick = {
+                        viewModel.onAction(
+                            MainAction.AddShape(
+                                shape = Shape.Arrow,
+                                center = Offset(canvasSize.width / 2, canvasSize.height / 2),
+                                size = min(canvasSize.width, canvasSize.height) * 0.8f
                             )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(
-                                    MainAction.AddShape(
-                                        shape = Shape.Triangle,
-                                        center = Offset(canvasSize.width / 2, canvasSize.height / 2),
-                                        size = min(canvasSize.width, canvasSize.height) * 0.8f
-                                    )
-                                )
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_triangle_24),
-                                contentDescription = "Triangle"
-                            )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = {
-                                viewModel.onAction(
-                                    MainAction.AddShape(
-                                        shape = Shape.Arrow,
-                                        center = Offset(canvasSize.width / 2, canvasSize.height / 2),
-                                        size = min(canvasSize.width, canvasSize.height) * 0.8f
-                                    )
-                                )
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_arrow_up_24),
-                                contentDescription = "Arrow up"
-                            )
-                        }
-
-                        IconButton(
-                            modifier = Modifier.size(32.dp),
-                            onClick = { viewModel.onAction(MainAction.ShowGenerateFramesDialog) }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_dice_24),
-                                contentDescription = "Generate frames"
-                            )
-                        }
+                        )
+                    },
+                    onGenerateFramesClick = {
+                        viewModel.onAction(MainAction.ShowGenerateFramesDialog)
                     }
-                }
+                )
 
                 ColorPanel(
                     modifier = Modifier
