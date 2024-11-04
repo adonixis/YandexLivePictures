@@ -78,6 +78,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.graphics.drawscope.rotate
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.White
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
@@ -107,58 +108,70 @@ private fun Path.drawSmoothLine(points: List<Offset>) {
     }
 }
 
-private fun DrawScope.drawSquare(center: Offset, size: Float, color: Color) {
-    val path = Path().apply {
-        moveTo(center.x - size/2, center.y - size/2)
-        lineTo(center.x + size/2, center.y - size/2)
-        lineTo(center.x + size/2, center.y + size/2)
-        lineTo(center.x - size/2, center.y + size/2)
-        close()
+private fun DrawScope.drawSquare(center: Offset, size: Float, color: Color, scale: Float = 1f, rotation: Float = 0f) {
+    val scaledSize = size * scale
+    rotate(rotation, center) {
+        val path = Path().apply {
+            moveTo(center.x - scaledSize/2, center.y - scaledSize/2)
+            lineTo(center.x + scaledSize/2, center.y - scaledSize/2)
+            lineTo(center.x + scaledSize/2, center.y + scaledSize/2)
+            lineTo(center.x - scaledSize/2, center.y + scaledSize/2)
+            close()
+        }
+        drawPath(
+            path = path,
+            color = color,
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
     }
-    drawPath(
-        path = path,
-        color = color,
-        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-    )
 }
 
-private fun DrawScope.drawCircle(center: Offset, size: Float, color: Color) {
-    drawCircle(
-        color = color,
-        radius = size/2,
-        center = center,
-        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-    )
+private fun DrawScope.drawCircle(center: Offset, size: Float, color: Color, scale: Float = 1f, rotation: Float = 0f) {
+    val scaledSize = size * scale
+    rotate(rotation, center) {
+        drawCircle(
+            color = color,
+            radius = scaledSize/2,
+            center = center,
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+        )
+    }
 }
 
-private fun DrawScope.drawTriangle(center: Offset, size: Float, color: Color) {
-    val path = Path().apply {
-        moveTo(center.x, center.y - size/2)
-        lineTo(center.x + size/2, center.y + size/2)
-        lineTo(center.x - size/2, center.y + size/2)
-        close()
+private fun DrawScope.drawTriangle(center: Offset, size: Float, color: Color, scale: Float = 1f, rotation: Float = 0f) {
+    val scaledSize = size * scale
+    rotate(rotation, center) {
+        val path = Path().apply {
+            moveTo(center.x, center.y - scaledSize/2)
+            lineTo(center.x + scaledSize/2, center.y + scaledSize/2)
+            lineTo(center.x - scaledSize/2, center.y + scaledSize/2)
+            close()
+        }
+        drawPath(
+            path = path,
+            color = color,
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
     }
-    drawPath(
-        path = path,
-        color = color,
-        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-    )
 }
 
-private fun DrawScope.drawArrow(center: Offset, size: Float, color: Color) {
-    val path = Path().apply {
-        moveTo(center.x, center.y - size/2)
-        lineTo(center.x - size/3, center.y - size/6)
-        moveTo(center.x, center.y - size/2)
-        lineTo(center.x + size/3, center.y - size/6)
-        moveTo(center.x, center.y - size/2)
-        lineTo(center.x, center.y + size/2)
+private fun DrawScope.drawArrow(center: Offset, size: Float, color: Color, scale: Float = 1f, rotation: Float = 0f) {
+    val scaledSize = size * scale
+    rotate(rotation, center) {
+        val path = Path().apply {
+            moveTo(center.x, center.y - scaledSize/2)
+            lineTo(center.x - scaledSize/3, center.y - scaledSize/6)
+            moveTo(center.x, center.y - scaledSize/2)
+            lineTo(center.x + scaledSize/3, center.y - scaledSize/6)
+            moveTo(center.x, center.y - scaledSize/2)
+            lineTo(center.x, center.y + scaledSize/2)
+        }
+        drawPath(
+            path = path,
+            color = color,
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
     }
-    drawPath(
-        path = path,
-        color = color,
-        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-    )
 }
 
 @Composable
@@ -661,6 +674,61 @@ fun MainScreen(
                                         }
                                     }
 
+                                    Tool.SHAPES -> {
+                                        awaitPointerEventScope {
+                                            var currentScale = 1f
+                                            var previousDistance = 0f
+                                            var currentRotation = 0f
+                                            var previousAngle = 0f
+                                            
+                                            while (true) {
+                                                val event = awaitPointerEvent()
+                                                when (event.type) {
+                                                    PointerEventType.Move -> {
+                                                        if (event.changes.size == 2 && state.isShapeMovable) {
+                                                            val firstPoint = event.changes[0].position
+                                                            val secondPoint = event.changes[1].position
+                                                            
+                                                            val center = Offset(
+                                                                (firstPoint.x + secondPoint.x) / 2f,
+                                                                (firstPoint.y + secondPoint.y) / 2f
+                                                            )
+                                                            viewModel.onAction(MainAction.UpdateShapePosition(center))
+                                                            
+                                                            val currentDistance = firstPoint.getDistanceTo(secondPoint)
+                                                            if (previousDistance > 0) {
+                                                                val scaleFactor = currentDistance / previousDistance
+                                                                currentScale *= scaleFactor
+                                                                viewModel.onAction(MainAction.UpdateShapeScale(currentScale))
+                                                            }
+                                                            previousDistance = currentDistance
+                                                            
+                                                            val angle = kotlin.math.atan2(
+                                                                secondPoint.y - firstPoint.y,
+                                                                secondPoint.x - firstPoint.x
+                                                            ) * 180f / kotlin.math.PI.toFloat()
+                                                            
+                                                            if (previousAngle != 0f) {
+                                                                val deltaAngle = angle - previousAngle
+                                                                currentRotation = (currentRotation + deltaAngle) % 360f
+                                                                viewModel.onAction(MainAction.UpdateShapeRotation(currentRotation))
+                                                            }
+                                                            previousAngle = angle
+                                                            
+                                                            event.changes.forEach { it.consume() }
+                                                        }
+                                                    }
+                                                    PointerEventType.Release -> {
+                                                        if (event.changes.size == 2) {
+                                                            previousDistance = 0f
+                                                            previousAngle = 0f
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     else -> { /* ignore */
                                     }
                                 }
@@ -702,10 +770,10 @@ fun MainScreen(
                                         }
                                         is DrawAction.DrawShape -> {
                                             when (action.shape) {
-                                                Shape.Square -> drawSquare(action.center, action.size, Color(action.color))
-                                                Shape.Circle -> drawCircle(action.center, action.size, Color(action.color))
-                                                Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color))
-                                                Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color))
+                                                Shape.Square -> drawSquare(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                Shape.Circle -> drawCircle(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color), action.scale, action.rotation)
                                             }
                                         }
                                     }
@@ -745,10 +813,10 @@ fun MainScreen(
                                             }
                                             is DrawAction.DrawShape -> {
                                                 when (action.shape) {
-                                                    Shape.Square -> drawSquare(action.center, action.size, Color(action.color).copy(alpha = 0.3f))
-                                                    Shape.Circle -> drawCircle(action.center, action.size, Color(action.color).copy(alpha = 0.3f))
-                                                    Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color).copy(alpha = 0.3f))
-                                                    Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color).copy(alpha = 0.3f))
+                                                    Shape.Square -> drawSquare(action.center, action.size, Color(action.color).copy(alpha = 0.3f), action.scale, action.rotation)
+                                                    Shape.Circle -> drawCircle(action.center, action.size, Color(action.color).copy(alpha = 0.3f), action.scale, action.rotation)
+                                                    Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color).copy(alpha = 0.3f), action.scale, action.rotation)
+                                                    Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color).copy(alpha = 0.3f), action.scale, action.rotation)
                                                 }
                                             }
                                         }
@@ -791,10 +859,10 @@ fun MainScreen(
                                         }
                                         is DrawAction.DrawShape -> {
                                             when (action.shape) {
-                                                Shape.Square -> drawSquare(action.center, action.size, Color(action.color))
-                                                Shape.Circle -> drawCircle(action.center, action.size, Color(action.color))
-                                                Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color))
-                                                Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color))
+                                                Shape.Square -> drawSquare(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                Shape.Circle -> drawCircle(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                Shape.Triangle -> drawTriangle(action.center, action.size, Color(action.color), action.scale, action.rotation)
+                                                Shape.Arrow -> drawArrow(action.center, action.size, Color(action.color), action.scale, action.rotation)
                                             }
                                         }
                                     }
@@ -1557,4 +1625,11 @@ fun MainScreenPreview() {
     YandexLivePicturesTheme {
         MainScreen()
     }
+}
+
+// Вспомогательная функция для вычисления расстояния между точками
+private fun Offset.getDistanceTo(other: Offset): Float {
+    val dx = x - other.x
+    val dy = y - other.y
+    return kotlin.math.sqrt(dx * dx + dy * dy)
 }

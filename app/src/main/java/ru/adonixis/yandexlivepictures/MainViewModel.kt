@@ -174,6 +174,7 @@ class MainViewModel : ViewModel() {
             MainAction.DeleteCurrentFrame -> {
                 _state.update { currentState ->
                     if (currentState.frames.size <= 1) {
+                        updateThumbnailsAt(listOf(0))
                         val newFrames = listOf(Frame())
                         currentState.copy(
                             frames = newFrames,
@@ -227,7 +228,10 @@ class MainViewModel : ViewModel() {
                     val newFrames = currentState.frames.toMutableList()
                     newFrames[currentState.currentFrameIndex] = updatedFrame
                     
-                    currentState.copy(frames = newFrames)
+                    currentState.copy(
+                        frames = newFrames,
+                        isShapeMovable = true
+                    )
                 }
                 updateThumbnailsAt(listOf(state.value.currentFrameIndex))
             }
@@ -354,6 +358,81 @@ class MainViewModel : ViewModel() {
                     isFrameListVisible = false
                 ) }
             }
+            is MainAction.UpdateShapePosition -> {
+                if (!state.value.isShapeMovable) return
+                
+                _state.update { currentState ->
+                    val currentFrame = currentState.frames[currentState.currentFrameIndex]
+                    val lastAction = currentFrame.actionHistory.getOrNull(currentFrame.currentHistoryPosition)
+                    
+                    if (lastAction is DrawAction.DrawShape) {
+                        val newHistory = currentFrame.actionHistory.toMutableList()
+                        newHistory[currentFrame.currentHistoryPosition] = lastAction.copy(
+                            center = action.newCenter
+                        )
+                        
+                        val updatedFrame = currentFrame.copy(
+                            actionHistory = newHistory
+                        )
+                        
+                        val newFrames = currentState.frames.toMutableList()
+                        newFrames[currentState.currentFrameIndex] = updatedFrame
+                        
+                        currentState.copy(frames = newFrames)
+                    } else currentState
+                }
+                updateThumbnailsAt(listOf(state.value.currentFrameIndex))
+            }
+            is MainAction.UpdateShapeScale -> {
+                if (!state.value.isShapeMovable) return
+                
+                _state.update { currentState ->
+                    val currentFrame = currentState.frames[currentState.currentFrameIndex]
+                    val lastAction = currentFrame.actionHistory.getOrNull(currentFrame.currentHistoryPosition)
+                    
+                    if (lastAction is DrawAction.DrawShape) {
+                        val newHistory = currentFrame.actionHistory.toMutableList()
+                        newHistory[currentFrame.currentHistoryPosition] = lastAction.copy(
+                            scale = action.scale.coerceIn(0.1f, 5f)
+                        )
+                        
+                        val updatedFrame = currentFrame.copy(
+                            actionHistory = newHistory
+                        )
+                        
+                        val newFrames = currentState.frames.toMutableList()
+                        newFrames[currentState.currentFrameIndex] = updatedFrame
+                        
+                        currentState.copy(frames = newFrames)
+                    } else currentState
+                }
+                updateThumbnailsAt(listOf(state.value.currentFrameIndex))
+            }
+            is MainAction.UpdateShapeRotation -> {
+                if (!state.value.isShapeMovable) return
+                
+                _state.update { currentState ->
+                    val currentFrame = currentState.frames[currentState.currentFrameIndex]
+                    val lastAction = currentFrame.actionHistory.getOrNull(currentFrame.currentHistoryPosition)
+                    
+                    if (lastAction is DrawAction.DrawShape) {
+                        val newHistory = currentFrame.actionHistory.toMutableList()
+                        newHistory[currentFrame.currentHistoryPosition] = lastAction.copy(
+                            rotation = action.rotation
+                        )
+                        
+                        val updatedFrame = currentFrame.copy(
+                            actionHistory = newHistory
+                        )
+                        
+                        val newFrames = currentState.frames.toMutableList()
+                        newFrames[currentState.currentFrameIndex] = updatedFrame
+                        
+                        currentState.copy(frames = newFrames)
+                    } else currentState
+                }
+                updateThumbnailsAt(listOf(state.value.currentFrameIndex))
+            }
         }
     }
 
@@ -444,13 +523,20 @@ class MainViewModel : ViewModel() {
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
                                         }
+                                        val scaledSize = action.size * action.scale
+                                        
+                                        // Сохраняем текущую матрицу трансформации
+                                        drawingCanvas.save()
+                                        // Поворачиваем канвас вокруг центра фигуры
+                                        drawingCanvas.rotate(action.rotation, action.center.x, action.center.y)
+                                        
                                         when (action.shape) {
                                             Shape.Square -> {
                                                 val path = Path().apply {
-                                                    moveTo(action.center.x - action.size/2, action.center.y - action.size/2)
-                                                    lineTo(action.center.x + action.size/2, action.center.y - action.size/2)
-                                                    lineTo(action.center.x + action.size/2, action.center.y + action.size/2)
-                                                    lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
+                                                    moveTo(action.center.x - scaledSize/2, action.center.y - scaledSize/2)
+                                                    lineTo(action.center.x + scaledSize/2, action.center.y - scaledSize/2)
+                                                    lineTo(action.center.x + scaledSize/2, action.center.y + scaledSize/2)
+                                                    lineTo(action.center.x - scaledSize/2, action.center.y + scaledSize/2)
                                                     close()
                                                 }
                                                 drawingCanvas.drawPath(path, paint)
@@ -459,31 +545,34 @@ class MainViewModel : ViewModel() {
                                                 drawingCanvas.drawCircle(
                                                     action.center.x,
                                                     action.center.y,
-                                                    action.size / 2,
+                                                    scaledSize / 2,
                                                     paint
                                                 )
                                             }
                                             Shape.Triangle -> {
                                                 val path = Path().apply {
-                                                    moveTo(action.center.x, action.center.y - action.size/2)
-                                                    lineTo(action.center.x + action.size/2, action.center.y + action.size/2)
-                                                    lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
+                                                    moveTo(action.center.x, action.center.y - scaledSize/2)
+                                                    lineTo(action.center.x + scaledSize/2, action.center.y + scaledSize/2)
+                                                    lineTo(action.center.x - scaledSize/2, action.center.y + scaledSize/2)
                                                     close()
                                                 }
                                                 drawingCanvas.drawPath(path, paint)
                                             }
                                             Shape.Arrow -> {
                                                 val path = Path().apply {
-                                                    moveTo(action.center.x, action.center.y - action.size/2)
-                                                    lineTo(action.center.x - action.size/3, action.center.y - action.size/6)
-                                                    moveTo(action.center.x, action.center.y - action.size/2)
-                                                    lineTo(action.center.x + action.size/3, action.center.y - action.size/6)
-                                                    moveTo(action.center.x, action.center.y - action.size/2)
-                                                    lineTo(action.center.x, action.center.y + action.size/2)
+                                                    moveTo(action.center.x, action.center.y - scaledSize/2)
+                                                    lineTo(action.center.x - scaledSize/3, action.center.y - scaledSize/6)
+                                                    moveTo(action.center.x, action.center.y - scaledSize/2)
+                                                    lineTo(action.center.x + scaledSize/3, action.center.y - scaledSize/6)
+                                                    moveTo(action.center.x, action.center.y - scaledSize/2)
+                                                    lineTo(action.center.x, action.center.y + scaledSize/2)
                                                 }
                                                 drawingCanvas.drawPath(path, paint)
                                             }
                                         }
+                                        
+                                        // Восстанавливаем матрицу трансформации
+                                        drawingCanvas.restore()
                                     }
                                 }
                             }
@@ -593,6 +682,7 @@ class MainViewModel : ViewModel() {
             eraserWidth = eraserWidth,
             thumbnailHeight = thumbnailHeight
         ) }
+        updateThumbnailsAt(listOf(0))
     }
 
     override fun onCleared() {
@@ -644,41 +734,56 @@ class MainViewModel : ViewModel() {
                         strokeCap = Paint.Cap.ROUND
                         strokeJoin = Paint.Join.ROUND
                     }
+                    val scaledSize = action.size * action.scale
+                    
+                    // Сохраняем текущую матрицу трансформации
+                    canvas.save()
+                    // Поворачиваем канвас вокруг центра фигуры
+                    canvas.rotate(action.rotation, action.center.x, action.center.y)
+                    
                     when (action.shape) {
                         Shape.Square -> {
                             val path = Path().apply {
-                                moveTo(action.center.x - action.size/2, action.center.y - action.size/2)
-                                lineTo(action.center.x + action.size/2, action.center.y - action.size/2)
-                                lineTo(action.center.x + action.size/2, action.center.y + action.size/2)
-                                lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
+                                moveTo(action.center.x - scaledSize/2, action.center.y - scaledSize/2)
+                                lineTo(action.center.x + scaledSize/2, action.center.y - scaledSize/2)
+                                lineTo(action.center.x + scaledSize/2, action.center.y + scaledSize/2)
+                                lineTo(action.center.x - scaledSize/2, action.center.y + scaledSize/2)
                                 close()
                             }
                             canvas.drawPath(path, paint)
                         }
                         Shape.Circle -> {
-                            canvas.drawCircle(action.center.x, action.center.y, action.size/2, paint)
+                            canvas.drawCircle(
+                                action.center.x,
+                                action.center.y,
+                                scaledSize/2,
+                                paint
+                            )
                         }
                         Shape.Triangle -> {
                             val path = Path().apply {
-                                moveTo(action.center.x, action.center.y - action.size/2)
-                                lineTo(action.center.x + action.size/2, action.center.y + action.size/2)
-                                lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
+                                moveTo(action.center.x, action.center.y - scaledSize/2)
+                                lineTo(action.center.x + scaledSize/2, action.center.y + scaledSize/2)
+                                lineTo(action.center.x - scaledSize/2, action.center.y + scaledSize/2)
                                 close()
                             }
                             canvas.drawPath(path, paint)
                         }
                         Shape.Arrow -> {
                             val path = Path().apply {
-                                moveTo(action.center.x, action.center.y - action.size/2)
-                                lineTo(action.center.x - action.size/3, action.center.y - action.size/6)
-                                moveTo(action.center.x, action.center.y - action.size/2)
-                                lineTo(action.center.x + action.size/3, action.center.y - action.size/6)
-                                moveTo(action.center.x, action.center.y - action.size/2)
-                                lineTo(action.center.x, action.center.y + action.size/2)
+                                moveTo(action.center.x, action.center.y - scaledSize/2)
+                                lineTo(action.center.x - scaledSize/3, action.center.y - scaledSize/6)
+                                moveTo(action.center.x, action.center.y - scaledSize/2)
+                                lineTo(action.center.x + scaledSize/3, action.center.y - scaledSize/6)
+                                moveTo(action.center.x, action.center.y - scaledSize/2)
+                                lineTo(action.center.x, action.center.y + scaledSize/2)
                             }
                             canvas.drawPath(path, paint)
                         }
                     }
+                    
+                    // Восстанавливаем матрицу трансформации
+                    canvas.restore()
                 }
             }
         }
@@ -740,6 +845,7 @@ data class MainState(
     val eraserWidth: Float = 0f,
     val brushWidth: Float = 0f,
     val thumbnailHeight: Float = 0f,
+    val isShapeMovable: Boolean = false,
 )
 
 data class Frame(
@@ -782,12 +888,22 @@ sealed interface MainAction {
     data class SelectFrame(val index: Int) : MainAction
     data object ShowFrameList : MainAction
     data object HideFrameList : MainAction
+    data class UpdateShapePosition(val newCenter: Offset) : MainAction
+    data class UpdateShapeScale(val scale: Float) : MainAction
+    data class UpdateShapeRotation(val rotation: Float) : MainAction
 }
 
 sealed interface DrawAction {
     data class DrawPath(val path: List<Offset>, val color: Int, val width: Float) : DrawAction
     data class ErasePath(val path: List<Offset>, val width: Float) : DrawAction
-    data class DrawShape(val shape: Shape, val center: Offset, val size: Float, val color: Int) : DrawAction
+    data class DrawShape(
+        val shape: Shape, 
+        val center: Offset, 
+        val size: Float, 
+        val color: Int,
+        val scale: Float = 1f,
+        val rotation: Float = 0f
+    ) : DrawAction
 }
 
 sealed interface Shape {
