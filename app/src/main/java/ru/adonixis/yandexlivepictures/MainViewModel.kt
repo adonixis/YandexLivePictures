@@ -285,7 +285,6 @@ class MainViewModel : ViewModel() {
             }
             is MainAction.UpdateCanvasSize -> {
                 _state.update { it.copy(canvasSize = action.size) }
-                updateThumbnails()
             }
             MainAction.ShowDeleteAllDialog -> {
                 _state.update { it.copy(isDeleteAllDialogVisible = true) }

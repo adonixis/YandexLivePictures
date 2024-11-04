@@ -234,7 +234,7 @@ fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = viewModel()
 ) {
-    val state = viewModel.state.collectAsState().value
+    val state by viewModel.state.collectAsState()
     val currentPath = remember { mutableStateListOf<Offset>() }
     val currentEraserPath = remember { mutableStateListOf<Offset>() }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
