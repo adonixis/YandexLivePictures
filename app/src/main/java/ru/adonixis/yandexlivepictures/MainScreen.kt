@@ -680,17 +680,17 @@ fun MainScreen(
                                             var initialScale = 1f
                                             var currentRotation = 0f
                                             var previousAngle = 0f
+                                            var isDragging = false
                                             
                                             while (true) {
                                                 val event = awaitPointerEvent()
                                                 when (event.type) {
                                                     PointerEventType.Press -> {
-                                                        // Сбрасываем значения при новом касании
+                                                        isDragging = true
                                                         if (event.changes.size == 2) {
                                                             val firstPoint = event.changes[0].position
                                                             val secondPoint = event.changes[1].position
                                                             initialDistance = firstPoint.getDistanceTo(secondPoint)
-                                                            // Запоминаем текущий масштаб фигуры при начале жеста
                                                             val currentFrame = state.frames[state.currentFrameIndex]
                                                             val lastAction = currentFrame.actionHistory.getOrNull(currentFrame.currentHistoryPosition)
                                                             if (lastAction is DrawAction.DrawShape) {
@@ -698,10 +698,11 @@ fun MainScreen(
                                                             }
                                                         }
                                                         previousAngle = 0f
+                                                        viewModel.onAction(MainAction.HideFrameList)
                                                     }
                                                     
                                                     PointerEventType.Move -> {
-                                                        if (!state.isShapeMovable) continue
+                                                        if (!state.isShapeMovable || !isDragging) continue
                                                         
                                                         when (event.changes.size) {
                                                             1 -> {
@@ -744,11 +745,10 @@ fun MainScreen(
                                                     }
                                                     
                                                     PointerEventType.Release -> {
-                                                        when (event.changes.size) {
-                                                            2 -> {
-                                                                initialDistance = 0f
-                                                                previousAngle = 0f
-                                                            }
+                                                        isDragging = false
+                                                        if (event.changes.size == 2) {
+                                                            initialDistance = 0f
+                                                            previousAngle = 0f
                                                         }
                                                     }
                                                 }
