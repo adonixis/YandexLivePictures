@@ -109,7 +109,7 @@ class MainViewModel : ViewModel() {
                     
                     currentState.copy(frames = newFrames)
                 }
-                updateThumbnails()
+                updateThumbnailsAt(listOf(state.value.currentFrameIndex))
             }
             is MainAction.AddEraserPath -> {
                 _state.update { currentState ->
@@ -130,7 +130,7 @@ class MainViewModel : ViewModel() {
                     
                     currentState.copy(frames = newFrames)
                 }
-                updateThumbnails()
+                updateThumbnailsAt(listOf(state.value.currentFrameIndex))
             }
             MainAction.Undo -> {
                 _state.update { currentState ->
@@ -144,7 +144,7 @@ class MainViewModel : ViewModel() {
                         currentState.copy(frames = newFrames)
                     } else currentState
                 }
-                updateThumbnails()
+                updateThumbnailsAt(listOf(state.value.currentFrameIndex))
             }
             MainAction.Redo -> {
                 _state.update { currentState ->
@@ -158,7 +158,7 @@ class MainViewModel : ViewModel() {
                         currentState.copy(frames = newFrames)
                     } else currentState
                 }
-                updateThumbnails()
+                updateThumbnailsAt(listOf(state.value.currentFrameIndex))
             }
             MainAction.AddNewFrame -> {
                 _state.update { currentState ->
@@ -169,7 +169,7 @@ class MainViewModel : ViewModel() {
                         currentFrameIndex = newFrames.size - 1
                     )
                 }
-                updateThumbnails()
+                updateThumbnailsAt(listOf(state.value.frames.size - 1))
             }
             MainAction.DeleteCurrentFrame -> {
                 _state.update { currentState ->
@@ -195,7 +195,6 @@ class MainViewModel : ViewModel() {
                         )
                     }
                 }
-                updateThumbnails()
             }
             MainAction.StartPlayback -> {
                 _state.update { currentState ->
@@ -230,7 +229,7 @@ class MainViewModel : ViewModel() {
                     
                     currentState.copy(frames = newFrames)
                 }
-                updateThumbnails()
+                updateThumbnailsAt(listOf(state.value.currentFrameIndex))
             }
             MainAction.ShowGenerateFramesDialog -> {
                 _state.update { it.copy(isGenerateFramesDialogVisible = true) }
@@ -239,6 +238,7 @@ class MainViewModel : ViewModel() {
                 _state.update { it.copy(isGenerateFramesDialogVisible = false) }
             }
             is MainAction.GenerateBouncingBallFrames -> {
+                val startIndex = state.value.frames.size
                 _state.update { currentState ->
                     val newFrames = currentState.frames.toMutableList()
                     
@@ -281,7 +281,8 @@ class MainViewModel : ViewModel() {
                         isGenerateFramesDialogVisible = false
                     )
                 }
-                updateThumbnails()
+                val newIndices = (startIndex until state.value.frames.size).toList()
+                updateThumbnailsAt(newIndices)
             }
             is MainAction.UpdateCanvasSize -> {
                 _state.update { it.copy(canvasSize = action.size) }
@@ -300,7 +301,7 @@ class MainViewModel : ViewModel() {
                         isDeleteAllDialogVisible = false
                     )
                 }
-                updateThumbnails()
+                updateThumbnailsAt(listOf(0))
             }
             MainAction.ShowDuplicateFrameDialog -> {
                 _state.update { it.copy(isDuplicateFrameDialogVisible = true) }
@@ -309,6 +310,7 @@ class MainViewModel : ViewModel() {
                 _state.update { it.copy(isDuplicateFrameDialogVisible = false) }
             }
             MainAction.DuplicateCurrentFrame -> {
+                val originalIndex = state.value.currentFrameIndex
                 _state.update { currentState ->
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
                     val duplicatedFrame = currentFrame.copy()
@@ -321,7 +323,7 @@ class MainViewModel : ViewModel() {
                         isDuplicateFrameDialogVisible = false
                     )
                 }
-                updateThumbnails()
+                updateThumbnailsAt(listOf(originalIndex + 1))
             }
             MainAction.ShowPlaybackSpeedDialog -> {
                 _state.update { it.copy(isPlaybackSpeedDialogVisible = true) }
@@ -695,12 +697,19 @@ class MainViewModel : ViewModel() {
         return scaledBitmap.asImageBitmap()
     }
 
-    private fun updateThumbnails() {
+    private fun updateSingleThumbnail(frame: Frame): Frame {
+        return frame.copy(
+            thumbnail = generateThumbnail(frame, state.value.thumbnailHeight.toInt())
+        )
+    }
+
+    private fun updateThumbnailsAt(indices: List<Int>) {
         viewModelScope.launch(Dispatchers.Default) {
-            val newFrames = state.value.frames.map { frame ->
-                frame.copy(
-                    thumbnail = generateThumbnail(frame, state.value.thumbnailHeight.toInt())
-                )
+            val newFrames = state.value.frames.toMutableList()
+            indices.forEach { index ->
+                if (index in newFrames.indices) {
+                    newFrames[index] = updateSingleThumbnail(newFrames[index])
+                }
             }
             _state.update { it.copy(frames = newFrames) }
         }
