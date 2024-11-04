@@ -3,35 +3,16 @@ package ru.adonixis.yandexlivepictures
 import android.content.ClipData
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -66,11 +47,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
+import ru.adonixis.yandexlivepictures.components.BottomToolBar
 import ru.adonixis.yandexlivepictures.components.ProgressIndicator
+import ru.adonixis.yandexlivepictures.components.TopActionBar
 import ru.adonixis.yandexlivepictures.components.dialog.DeleteAllFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.DuplicateFrameDialog
 import ru.adonixis.yandexlivepictures.components.dialog.GenerateFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.PlaybackSpeedDialog
+import ru.adonixis.yandexlivepictures.components.panel.ColorPanel
+import ru.adonixis.yandexlivepictures.components.panel.FrameListPanel
+import ru.adonixis.yandexlivepictures.components.panel.ShapePanel
+import ru.adonixis.yandexlivepictures.components.panel.WidthSliderPanel
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawArrow
@@ -80,12 +67,6 @@ import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawSquare
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawTriangle
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.getDistanceTo
 import kotlin.math.min
-import ru.adonixis.yandexlivepictures.components.TopActionBar
-import ru.adonixis.yandexlivepictures.components.BottomToolBar
-import ru.adonixis.yandexlivepictures.components.panel.ColorPanel
-import ru.adonixis.yandexlivepictures.components.panel.WidthSliderPanel
-import ru.adonixis.yandexlivepictures.components.panel.ShapePanel
-import ru.adonixis.yandexlivepictures.components.panel.FrameListPanel
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
