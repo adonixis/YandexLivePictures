@@ -178,9 +178,15 @@ class MainViewModel : ViewModel() {
                         val newFrames = currentState.frames.toMutableList()
                         newFrames.removeAt(currentState.currentFrameIndex)
                         
+                        val newIndex = when {
+                            currentState.currentFrameIndex == 0 -> 0
+                            currentState.currentFrameIndex >= newFrames.size -> newFrames.size - 1
+                            else -> currentState.currentFrameIndex
+                        }
+                        
                         currentState.copy(
                             frames = newFrames,
-                            currentFrameIndex = currentState.currentFrameIndex - 1
+                            currentFrameIndex = newIndex
                         )
                     }
                 }
@@ -321,6 +327,21 @@ class MainViewModel : ViewModel() {
                 startPlayback()
             }
             is MainAction.SaveAsGif -> saveAsGif(action.context, action.density)
+            is MainAction.SelectFrame -> {
+                _state.update { it.copy(
+                    currentFrameIndex = action.index
+                ) }
+            }
+            MainAction.ShowFrameList -> {
+                _state.update { it.copy(
+                    isFrameListVisible = true
+                ) }
+            }
+            MainAction.HideFrameList -> {
+                _state.update { it.copy(
+                    isFrameListVisible = false
+                ) }
+            }
         }
     }
 
@@ -574,7 +595,8 @@ data class MainState(
     val isPlaybackSpeedDialogVisible: Boolean = false,
     val playbackFps: Int = 5,
     val isSavingGif: Boolean = false,
-    val gifSavingResult: GifSavingResult? = null
+    val gifSavingResult: GifSavingResult? = null,
+    val isFrameListVisible: Boolean = false
 )
 
 data class Frame(
@@ -613,6 +635,9 @@ sealed interface MainAction {
     data object HidePlaybackSpeedDialog : MainAction
     data class UpdatePlaybackSpeed(val fps: Int) : MainAction
     data class SaveAsGif(val context: Context, val density: Density) : MainAction
+    data class SelectFrame(val index: Int) : MainAction
+    data object ShowFrameList : MainAction
+    data object HideFrameList : MainAction
 }
 
 sealed interface DrawAction {

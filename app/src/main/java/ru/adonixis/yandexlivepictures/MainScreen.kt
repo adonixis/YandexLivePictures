@@ -73,6 +73,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.White
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
@@ -447,12 +450,16 @@ fun MainScreen(
 
                 IconButton(
                     modifier = Modifier.size(36.dp),
-                    onClick = { },
+                    onClick = { viewModel.onAction(MainAction.ShowFrameList) },
                     enabled = !state.isPlaybackActive
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_layers_32),
-                        contentDescription = "Layers icon"
+                        contentDescription = "Layers icon",
+                        tint = if (state.isFrameListVisible)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -810,6 +817,69 @@ fun MainScreen(
             }
 
             if (!state.isPlaybackActive) {
+                // Панель с кадрами
+                this@Column.AnimatedVisibility(
+                    visible = state.isFrameListVisible,
+                    enter = fadeIn(animationSpec = tween(durationMillis = 200)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = 200)),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 80.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = Color(0xFF555454).copy(alpha = 0.16f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(12.dp)
+                    ) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            state = rememberLazyListState()
+                        ) {
+                            items(state.frames.indices.toList()) { index ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(
+                                            color = if (index == state.currentFrameIndex)
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                            else
+                                                MaterialTheme.colorScheme.surface
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = if (index == state.currentFrameIndex)
+                                                MaterialTheme.colorScheme.primary
+                                            else
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                            shape = RoundedCornerShape(4.dp)
+                                        )
+                                        .clickable {
+                                            viewModel.onAction(MainAction.SelectFrame(index))
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${index + 1}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = if (index == state.currentFrameIndex)
+                                            MaterialTheme.colorScheme.primary
+                                        else
+                                            MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Панель с фигурами
                 this@Column.AnimatedVisibility(
