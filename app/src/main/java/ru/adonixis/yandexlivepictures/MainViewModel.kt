@@ -29,9 +29,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider.getUriForFile
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 
 class MainViewModel : ViewModel() {
     private val _state = MutableStateFlow(MainState())
@@ -109,6 +109,7 @@ class MainViewModel : ViewModel() {
                     
                     currentState.copy(frames = newFrames)
                 }
+                updateThumbnails()
             }
             is MainAction.AddEraserPath -> {
                 _state.update { currentState ->
@@ -129,6 +130,7 @@ class MainViewModel : ViewModel() {
                     
                     currentState.copy(frames = newFrames)
                 }
+                updateThumbnails()
             }
             MainAction.Undo -> {
                 _state.update { currentState ->
@@ -142,6 +144,7 @@ class MainViewModel : ViewModel() {
                         currentState.copy(frames = newFrames)
                     } else currentState
                 }
+                updateThumbnails()
             }
             MainAction.Redo -> {
                 _state.update { currentState ->
@@ -155,6 +158,7 @@ class MainViewModel : ViewModel() {
                         currentState.copy(frames = newFrames)
                     } else currentState
                 }
+                updateThumbnails()
             }
             MainAction.AddNewFrame -> {
                 _state.update { currentState ->
@@ -165,6 +169,7 @@ class MainViewModel : ViewModel() {
                         currentFrameIndex = newFrames.size - 1
                     )
                 }
+                updateThumbnails()
             }
             MainAction.DeleteCurrentFrame -> {
                 _state.update { currentState ->
@@ -190,6 +195,7 @@ class MainViewModel : ViewModel() {
                         )
                     }
                 }
+                updateThumbnails()
             }
             MainAction.StartPlayback -> {
                 _state.update { currentState ->
@@ -224,6 +230,7 @@ class MainViewModel : ViewModel() {
                     
                     currentState.copy(frames = newFrames)
                 }
+                updateThumbnails()
             }
             MainAction.ShowGenerateFramesDialog -> {
                 _state.update { it.copy(isGenerateFramesDialogVisible = true) }
@@ -274,9 +281,11 @@ class MainViewModel : ViewModel() {
                         isGenerateFramesDialogVisible = false
                     )
                 }
+                updateThumbnails()
             }
             is MainAction.UpdateCanvasSize -> {
                 _state.update { it.copy(canvasSize = action.size) }
+                updateThumbnails()
             }
             MainAction.ShowDeleteAllDialog -> {
                 _state.update { it.copy(isDeleteAllDialogVisible = true) }
@@ -292,6 +301,7 @@ class MainViewModel : ViewModel() {
                         isDeleteAllDialogVisible = false
                     )
                 }
+                updateThumbnails()
             }
             MainAction.ShowDuplicateFrameDialog -> {
                 _state.update { it.copy(isDuplicateFrameDialogVisible = true) }
@@ -312,6 +322,7 @@ class MainViewModel : ViewModel() {
                         isDuplicateFrameDialogVisible = false
                     )
                 }
+                updateThumbnails()
             }
             MainAction.ShowPlaybackSpeedDialog -> {
                 _state.update { it.copy(isPlaybackSpeedDialogVisible = true) }
@@ -569,17 +580,128 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun initializeWidths(pencilWidth: Float, brushWidth: Float, eraserWidth: Float) {
+    fun initializeSizes(
+        pencilWidth: Float,
+        brushWidth: Float,
+        eraserWidth: Float,
+        thumbnailHeight: Float
+    ) {
         _state.update { it.copy(
             pencilWidth = pencilWidth,
             brushWidth = brushWidth,
-            eraserWidth = eraserWidth
+            eraserWidth = eraserWidth,
+            thumbnailHeight = thumbnailHeight
         ) }
     }
 
     override fun onCleared() {
         super.onCleared()
         viewModelScope.coroutineContext.cancelChildren()
+    }
+
+    private fun generateThumbnail(frame: Frame, height: Int): ImageBitmap? {
+        if (state.value.canvasSize.width <= 0 || state.value.canvasSize.height <= 0) {
+            return null
+        }
+        
+        val aspectRatio = state.value.canvasSize.width / state.value.canvasSize.height
+        val width = (height * aspectRatio).toInt()
+        
+        if (width <= 0 || height <= 0) {
+            return null
+        }
+        
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        
+        canvas.drawColor(android.graphics.Color.WHITE)
+        
+        val scale = height.toFloat() / state.value.canvasSize.height
+        
+        canvas.scale(scale, scale)
+        
+        frame.actionHistory.take(frame.currentHistoryPosition + 1).forEach { action ->
+            when (action) {
+                is DrawAction.DrawPath -> {
+                    val paint = Paint().apply {
+                        color = action.color
+                        strokeWidth = action.width
+                        style = Paint.Style.STROKE
+                        strokeCap = Paint.Cap.ROUND
+                        strokeJoin = Paint.Join.ROUND
+                    }
+                    drawSmoothLine(canvas, action.path, paint)
+                }
+                is DrawAction.ErasePath -> {
+                    val paint = Paint().apply {
+                        strokeWidth = action.width
+                        style = Paint.Style.STROKE
+                        strokeCap = Paint.Cap.ROUND
+                        strokeJoin = Paint.Join.ROUND
+                        color = android.graphics.Color.WHITE
+                    }
+                    drawSmoothLine(canvas, action.path, paint)
+                }
+                is DrawAction.DrawShape -> {
+                    val paint = Paint().apply {
+                        color = action.color
+                        strokeWidth = state.value.pencilWidth
+                        style = Paint.Style.STROKE
+                        strokeCap = Paint.Cap.ROUND
+                        strokeJoin = Paint.Join.ROUND
+                    }
+                    when (action.shape) {
+                        Shape.Square -> {
+                            val path = Path().apply {
+                                moveTo(action.center.x - action.size/2, action.center.y - action.size/2)
+                                lineTo(action.center.x + action.size/2, action.center.y - action.size/2)
+                                lineTo(action.center.x + action.size/2, action.center.y + action.size/2)
+                                lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
+                                close()
+                            }
+                            canvas.drawPath(path, paint)
+                        }
+                        Shape.Circle -> {
+                            canvas.drawCircle(action.center.x, action.center.y, action.size/2, paint)
+                        }
+                        Shape.Triangle -> {
+                            val path = Path().apply {
+                                moveTo(action.center.x, action.center.y - action.size/2)
+                                lineTo(action.center.x + action.size/2, action.center.y + action.size/2)
+                                lineTo(action.center.x - action.size/2, action.center.y + action.size/2)
+                                close()
+                            }
+                            canvas.drawPath(path, paint)
+                        }
+                        Shape.Arrow -> {
+                            val path = Path().apply {
+                                moveTo(action.center.x, action.center.y - action.size/2)
+                                lineTo(action.center.x - action.size/3, action.center.y - action.size/6)
+                                moveTo(action.center.x, action.center.y - action.size/2)
+                                lineTo(action.center.x + action.size/3, action.center.y - action.size/6)
+                                moveTo(action.center.x, action.center.y - action.size/2)
+                                lineTo(action.center.x, action.center.y + action.size/2)
+                            }
+                            canvas.drawPath(path, paint)
+                        }
+                    }
+                }
+            }
+        }
+        
+        return bitmap.asImageBitmap()
+    }
+
+    private fun updateThumbnails() {
+        viewModelScope.launch(Dispatchers.Default) {
+            val newThumbnails = state.value.frames.mapIndexed { index, frame ->
+                generateThumbnail(frame, state.value.thumbnailHeight.toInt())?.let {
+                    index to it
+                }
+            }.filterNotNull().toMap()
+            
+            _state.update { it.copy(thumbnails = newThumbnails) }
+        }
     }
 }
 
@@ -605,7 +727,9 @@ data class MainState(
     val isFrameListVisible: Boolean = false,
     val pencilWidth: Float = 0f,
     val eraserWidth: Float = 0f,
-    val brushWidth: Float = 0f
+    val brushWidth: Float = 0f,
+    val thumbnailHeight: Float = 0f,
+    val thumbnails: Map<Int, ImageBitmap> = emptyMap()
 )
 
 data class Frame(

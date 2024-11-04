@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -243,10 +245,11 @@ fun MainScreen(
 
     LaunchedEffect(Unit) {
         with(density) {
-            viewModel.initializeWidths(
+            viewModel.initializeSizes(
                 pencilWidth = 2.dp.toPx(),
                 brushWidth = 20.dp.toPx(),
-                eraserWidth = 20.dp.toPx()
+                eraserWidth = 20.dp.toPx(),
+                thumbnailHeight = 100.dp.toPx()
             )
         }
     }
@@ -890,7 +893,10 @@ fun MainScreen(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(60.dp)
+                                            .height(100.dp)
+                                            .aspectRatio(
+                                                state.canvasSize.width / state.canvasSize.height
+                                            )
                                             .clip(RoundedCornerShape(4.dp))
                                             .background(
                                                 color = if (index == state.currentFrameIndex)
@@ -911,14 +917,30 @@ fun MainScreen(
                                             },
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text(
-                                            text = "${index + 1}",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = if (index == state.currentFrameIndex)
-                                                MaterialTheme.colorScheme.primary
-                                            else
-                                                MaterialTheme.colorScheme.onSurface
-                                        )
+                                        state.thumbnails[index]?.let { thumbnail ->
+                                            Image(
+                                                bitmap = thumbnail,
+                                                contentDescription = "Frame thumbnail",
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Fit
+                                            )
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .padding(4.dp)
+                                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "${index + 1}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (index == state.currentFrameIndex)
+                                                    MaterialTheme.colorScheme.primary
+                                                else
+                                                    Color.Black
+                                            )
+                                        }
                                     }
 
                                     Row(
