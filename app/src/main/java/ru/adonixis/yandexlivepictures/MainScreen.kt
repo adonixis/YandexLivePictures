@@ -85,6 +85,10 @@ import ru.adonixis.yandexlivepictures.theme.White
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import kotlin.math.ceil
 import kotlin.math.min
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.graphicsLayer
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -96,6 +100,8 @@ private object ScreenConstants {
     const val THUMBNAIL_HEIGHT = 100f
     const val FRAME_COUNT_DEFAULT = 10
     const val PLAYBACK_SPEED_DEFAULT = 5
+    const val CANVAS_SCALE_MIN = 1f
+    const val CANVAS_SCALE_MAX = 5f
 }
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
@@ -269,6 +275,26 @@ fun MainScreen(
     val context = LocalContext.current
     val density = LocalDensity.current
 
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    var previousScale by remember { mutableFloatStateOf(1f) }
+    var previousOffset by remember { mutableStateOf(Offset.Zero) }
+
+    val transformableState = rememberTransformableState { zoomChange, offsetChange, _ ->
+        if (state.currentTool == Tool.ZOOM) {
+            val newScale = (scale * zoomChange).coerceIn(ScreenConstants.CANVAS_SCALE_MIN, ScreenConstants.CANVAS_SCALE_MAX)
+            
+            val maxX = (canvasSize.width * (newScale - 1)) / 2
+            val maxY = (canvasSize.height * (newScale - 1)) / 2
+            
+            val newOffsetX = (offset.x + offsetChange.x).coerceIn(-maxX, maxX)
+            val newOffsetY = (offset.y + offsetChange.y).coerceIn(-maxY, maxY)
+            
+            scale = newScale
+            offset = Offset(newOffsetX, newOffsetY)
+        }
+    }
+
     LaunchedEffect(Unit) {
         with(density) {
             viewModel.initializeSizes(
@@ -300,6 +326,18 @@ fun MainScreen(
                     ).show()
                 }
             }
+        }
+    }
+
+    LaunchedEffect(state.isPlaybackActive) {
+        if (state.isPlaybackActive) {
+            previousScale = scale
+            previousOffset = offset
+            scale = 1f
+            offset = Offset.Zero
+        } else {
+            scale = previousScale
+            offset = previousOffset
         }
     }
 
@@ -495,9 +533,20 @@ fun MainScreen(
                     .fillMaxWidth()
                     .padding(top = 32.dp, bottom = 22.dp)
                     .clip(shape = RoundedCornerShape(20.dp))
+                    .transformable(
+                        state = transformableState,
+                        enabled = !state.isPlaybackActive && state.currentTool == Tool.ZOOM
+                    )
             ) {
                 Image(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
+                        ),
                     painter = painterResource(id = R.drawable.bg_paper),
                     contentDescription = "Paper background",
                     contentScale = ContentScale.Crop
@@ -506,6 +555,12 @@ fun MainScreen(
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
+                        )
                         .onSizeChanged {
                             canvasSize = it.toSize()
                             viewModel.onAction(MainAction.UpdateCanvasSize(canvasSize))
@@ -550,8 +605,7 @@ fun MainScreen(
                                                         currentPath.clear()
                                                     }
 
-                                                    else -> { /* ignore */
-                                                    }
+                                                    else -> { /* ignore */ }
                                                 }
                                             }
                                         }
@@ -594,8 +648,7 @@ fun MainScreen(
                                                         currentEraserPath.clear()
                                                     }
 
-                                                    else -> { /* ignore */
-                                                    }
+                                                    else -> { /* ignore */ }
                                                 }
                                             }
                                         }
@@ -719,8 +772,7 @@ fun MainScreen(
                                         }
                                     }
 
-                                    else -> { /* ignore */
-                                    }
+                                    else -> { /* ignore */ }
                                 }
                             }
                         }
@@ -1512,6 +1564,21 @@ fun MainScreen(
                                 MaterialTheme.colorScheme.onBackground,
                             shape = CircleShape
                         ),
+                )
+            }
+
+            IconButton(
+                modifier = Modifier.size(36.dp),
+                onClick = { viewModel.onAction(MainAction.SelectTool(Tool.ZOOM)) },
+                enabled = !state.isPlaybackActive
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_zoom_32),
+                    contentDescription = "Zoom",
+                    tint = if (state.currentTool == Tool.ZOOM)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurface
                 )
             }
         }

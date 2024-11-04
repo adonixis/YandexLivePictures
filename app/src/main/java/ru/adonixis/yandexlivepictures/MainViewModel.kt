@@ -919,7 +919,7 @@ sealed interface Shape {
 }
 
 enum class Tool {
-    PENCIL, BRUSH, ERASER, SHAPES, COLORS
+    PENCIL, BRUSH, ERASER, SHAPES, COLORS, ZOOM
 }
 
 sealed interface GifSavingResult {
