@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -297,88 +296,6 @@ fun MainScreen(
                 }
             }
         }
-    }
-
-    if (state.isGenerateFramesDialogVisible) {
-        AlertDialog(
-            onDismissRequest = { viewModel.onAction(MainAction.HideGenerateFramesDialog) },
-            title = { Text("Генерация кадров") },
-            text = {
-                TextField(
-                    value = frameCount,
-                    onValueChange = { text ->
-                        if (text.isEmpty()) {
-                            frameCount = ""
-                        } else if ((text.toIntOrNull() ?: 0) > 0) {
-                            frameCount = text
-                        }
-                    },
-                    label = { Text("Количество кадров") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = (frameCount.toIntOrNull() ?: 0) > 0,
-                    onClick = {
-                        frameCount.toIntOrNull()?.let {
-                            if (it > 0)
-                                viewModel.onAction(MainAction.GenerateBouncingBallFrames(it))
-                        }
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.onAction(MainAction.HideGenerateFramesDialog) }
-                ) {
-                    Text("Отмена")
-                }
-            }
-        )
-    }
-
-    if (state.isPlaybackSpeedDialogVisible) {
-        AlertDialog(
-            onDismissRequest = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) },
-            title = { Text("Скорость воспроизведения") },
-            text = {
-                TextField(
-                    value = playbackSpeed,
-                    onValueChange = { text ->
-                        if (text.isEmpty()) {
-                            playbackSpeed = ""
-                        } else if (((text.toIntOrNull() ?: 0) > 0) && ((text.toIntOrNull() ?: 0) <= ScreenConstants.MAX_FPS)) {
-                            playbackSpeed = text
-                        }
-                    },
-                    label = { Text("Кадов в секунду (от 0 до ${ScreenConstants.MAX_FPS})") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = ((playbackSpeed.toIntOrNull() ?: 0) > 0) && ((playbackSpeed.toIntOrNull() ?: 0) <= ScreenConstants.MAX_FPS),
-                    onClick = {
-                        playbackSpeed.toIntOrNull()?.let {
-                            if (it in 1..ScreenConstants.MAX_FPS)
-                                viewModel.onAction(MainAction.UpdatePlaybackSpeed(it))
-                        }
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) }
-                ) {
-                    Text("Отмена")
-                }
-            }
-        )
     }
 
     Column(
@@ -1595,6 +1512,88 @@ fun MainScreen(
             dismissButton = {
                 TextButton(
                     onClick = { viewModel.onAction(MainAction.HideDuplicateFrameDialog) }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
+
+    if (state.isGenerateFramesDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(MainAction.HideGenerateFramesDialog) },
+            title = { Text("Генерация кадров") },
+            text = {
+                TextField(
+                    value = frameCount,
+                    onValueChange = { text ->
+                        if (text.isEmpty()) {
+                            frameCount = ""
+                        } else if ((text.toIntOrNull() ?: 0) > 0) {
+                            frameCount = text
+                        }
+                    },
+                    label = { Text("Количество кадров") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = (frameCount.toIntOrNull() ?: 0) > 0,
+                    onClick = {
+                        frameCount.toIntOrNull()?.let {
+                            if (it > 0)
+                                viewModel.onAction(MainAction.GenerateBouncingBallFrames(it))
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.onAction(MainAction.HideGenerateFramesDialog) }
+                ) {
+                    Text("Отмена")
+                }
+            }
+        )
+    }
+
+    if (state.isPlaybackSpeedDialogVisible) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) },
+            title = { Text("Скорость воспроизведения") },
+            text = {
+                TextField(
+                    value = playbackSpeed,
+                    onValueChange = { text ->
+                        if (text.isEmpty()) {
+                            playbackSpeed = ""
+                        } else if (((text.toIntOrNull() ?: 0) > 0) && ((text.toIntOrNull() ?: 0) <= ScreenConstants.MAX_FPS)) {
+                            playbackSpeed = text
+                        }
+                    },
+                    label = { Text("Кадов в секунду (от 0 до ${ScreenConstants.MAX_FPS})") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = ((playbackSpeed.toIntOrNull() ?: 0) > 0) && ((playbackSpeed.toIntOrNull() ?: 0) <= ScreenConstants.MAX_FPS),
+                    onClick = {
+                        playbackSpeed.toIntOrNull()?.let {
+                            if (it in 1..ScreenConstants.MAX_FPS)
+                                viewModel.onAction(MainAction.UpdatePlaybackSpeed(it))
+                        }
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.onAction(MainAction.HidePlaybackSpeedDialog) }
                 ) {
                     Text("Отмена")
                 }
