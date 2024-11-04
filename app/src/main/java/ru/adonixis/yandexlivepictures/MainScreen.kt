@@ -67,6 +67,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -88,6 +89,7 @@ import kotlin.math.ceil
 import kotlin.math.min
 import ru.adonixis.yandexlivepictures.components.TopActionBar
 import ru.adonixis.yandexlivepictures.components.BottomToolBar
+import ru.adonixis.yandexlivepictures.components.panel.WidthSliderPanel
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -1074,71 +1076,39 @@ fun MainScreen(
                     }
                 }
 
-                this@Column.AnimatedVisibility(
-                    visible = state.isEraserWidthSliderVisible,
-                    enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
-                    exit = fadeOut(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
-                            .clickable(enabled = false) { }
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(16.dp)
-                    ) {
-                        WidthSlider(
-                            value = with(density) { state.eraserWidth.toDp().value },
-                            onValueChange = { dpValue ->
-                                with(density) {
-                                    viewModel.onAction(MainAction.UpdateEraserWidth(dpValue.dp.toPx()))
-                                }
-                            },
-                            valueRange = ScreenConstants.SLIDER_MIN..ScreenConstants.SLIDER_MAX
-                        )
+                WidthSliderPanel(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp, start = 32.dp, end = 32.dp),
+                    sliderMin = ScreenConstants.SLIDER_MIN,
+                    sliderMax = ScreenConstants.SLIDER_MAX,
+                    animationDurationMillis = ScreenConstants.ANIMATION_DURATION,
+                    alphaBackground = ScreenConstants.ALPHA_SEMI_TRANSPARENT,
+                    alphaBorder = ScreenConstants.ALPHA_BORDER,
+                    isVisible = state.isEraserWidthSliderVisible,
+                    eraserWidth = state.eraserWidth,
+                    density = density,
+                    onWidthChange = { width ->
+                        viewModel.onAction(MainAction.UpdateEraserWidth(width))
                     }
-                }
+                )
 
-                this@Column.AnimatedVisibility(
-                    visible = state.isBrushWidthSliderVisible,
-                    enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
-                    exit = fadeOut(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
-                            .clickable(enabled = false) { }
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(16.dp)
-                    ) {
-                        WidthSlider(
-                            value = with(density) { state.brushWidth.toDp().value },
-                            onValueChange = { dpValue ->
-                                with(density) {
-                                    viewModel.onAction(MainAction.UpdateBrushWidth(dpValue.dp.toPx()))
-                                }
-                            },
-                            valueRange = ScreenConstants.SLIDER_MIN..ScreenConstants.SLIDER_MAX
-                        )
+                WidthSliderPanel(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp, start = 32.dp, end = 32.dp),
+                    sliderMin = ScreenConstants.SLIDER_MIN,
+                    sliderMax = ScreenConstants.SLIDER_MAX,
+                    animationDurationMillis = ScreenConstants.ANIMATION_DURATION,
+                    alphaBackground = ScreenConstants.ALPHA_SEMI_TRANSPARENT,
+                    alphaBorder = ScreenConstants.ALPHA_BORDER,
+                    isVisible = state.isBrushWidthSliderVisible,
+                    eraserWidth = state.brushWidth,
+                    density = density,
+                    onWidthChange = { width ->
+                        viewModel.onAction(MainAction.UpdateBrushWidth(width))
                     }
-                }
+                )
             }
         }
 
