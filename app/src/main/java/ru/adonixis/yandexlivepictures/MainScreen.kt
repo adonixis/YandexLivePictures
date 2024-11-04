@@ -884,7 +884,7 @@ fun MainScreen(
                                             .clip(RoundedCornerShape(4.dp))
                                             .background(
                                                 color = if (index == state.currentFrameIndex)
-                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
                                                 else
                                                     MaterialTheme.colorScheme.surface
                                             )
@@ -926,7 +926,7 @@ fun MainScreen(
                                                 modifier = Modifier.size(16.dp),
                                                 painter = painterResource(id = R.drawable.ic_duplicate_24),
                                                 contentDescription = "Duplicate frame",
-                                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                                tint = MaterialTheme.colorScheme.onSurface
                                             )
                                         }
 
