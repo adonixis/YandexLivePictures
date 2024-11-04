@@ -66,6 +66,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -235,6 +236,7 @@ fun MainScreen(
     var frameCount by remember { mutableStateOf("10") }
     var playbackSpeed by remember { mutableStateOf("5") }
     val context = LocalContext.current
+    val density = LocalDensity.current
 
     LaunchedEffect(state.gifSavingResult) {
         state.gifSavingResult?.let { result ->
@@ -465,7 +467,7 @@ fun MainScreen(
                         modifier = Modifier.size(36.dp),
                         onClick = {
                             viewModel.onAction(MainAction.StopPlayback)
-                            viewModel.onAction(MainAction.SaveAsGif(context))
+                            viewModel.onAction(MainAction.SaveAsGif(context, density))
                         }
                     ) {
                         Icon(

@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.net.Uri
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -27,7 +29,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import android.widget.Toast
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider.getUriForFile
 
 class MainViewModel : ViewModel() {
@@ -317,7 +320,7 @@ class MainViewModel : ViewModel() {
                 ) }
                 startPlayback()
             }
-            is MainAction.SaveAsGif -> saveAsGif(action.context)
+            is MainAction.SaveAsGif -> saveAsGif(action.context, action.density)
         }
     }
 
@@ -333,7 +336,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun saveAsGif(context: Context) {
+    private fun saveAsGif(context: Context, density: Density) {
         viewModelScope.launch(Dispatchers.Default) {
             try {
                 _state.update { it.copy(isSavingGif = true, gifSavingResult = null) }
@@ -375,7 +378,7 @@ class MainViewModel : ViewModel() {
                                     is DrawAction.DrawPath -> {
                                         val paint = Paint().apply {
                                             color = action.color
-                                            strokeWidth = action.width
+                                            strokeWidth = with(density) { action.width.dp.toPx() }
                                             style = Paint.Style.STROKE
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
@@ -389,11 +392,11 @@ class MainViewModel : ViewModel() {
                                     }
                                     is DrawAction.ErasePath -> {
                                         val paint = Paint().apply {
-                                            strokeWidth = action.width
+                                            strokeWidth = with(density) { action.width.dp.toPx() }
                                             style = Paint.Style.STROKE
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
-                                            xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.CLEAR)
+                                            xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
                                         }
                                         val path = Path()
                                         action.path.forEachIndexed { i, offset ->
@@ -405,7 +408,7 @@ class MainViewModel : ViewModel() {
                                     is DrawAction.DrawShape -> {
                                         val paint = Paint().apply {
                                             color = action.color
-                                            strokeWidth = 2f
+                                            strokeWidth = with(density) { 2.dp.toPx() }
                                             style = Paint.Style.STROKE
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
@@ -461,7 +464,7 @@ class MainViewModel : ViewModel() {
                                 true
                             )
                             fullSizeBitmap.recycle()
-                            
+
                             withContext(Dispatchers.IO) {
                                 val file = File(framesDir, "frame_$index.png")
                                 FileOutputStream(file).use { out ->
@@ -580,7 +583,7 @@ sealed interface MainAction {
     data object ShowPlaybackSpeedDialog : MainAction
     data object HidePlaybackSpeedDialog : MainAction
     data class UpdatePlaybackSpeed(val fps: Int) : MainAction
-    data class SaveAsGif(val context: Context) : MainAction
+    data class SaveAsGif(val context: Context, val density: Density) : MainAction
 }
 
 sealed interface DrawAction {
