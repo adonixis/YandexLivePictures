@@ -845,12 +845,12 @@ fun MainScreen(
                             .padding(top = 16.dp, start = 16.dp, end = 16.dp)
                             .clickable(enabled = false) { }
                             .background(
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
                                 width = 1.dp,
-                                color = Color(0xFF555454).copy(alpha = 0.16f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(12.dp)
@@ -926,7 +926,7 @@ fun MainScreen(
                                                 modifier = Modifier.size(16.dp),
                                                 painter = painterResource(id = R.drawable.ic_duplicate_24),
                                                 contentDescription = "Duplicate frame",
-                                                tint = MaterialTheme.colorScheme.onSurface
+                                                tint = Black
                                             )
                                         }
 
@@ -941,7 +941,7 @@ fun MainScreen(
                                                 modifier = Modifier.size(16.dp),
                                                 painter = painterResource(id = R.drawable.ic_bin_32),
                                                 contentDescription = "Delete frame",
-                                                tint = MaterialTheme.colorScheme.onSurface
+                                                tint = Black
                                             )
                                         }
                                     }
@@ -967,12 +967,12 @@ fun MainScreen(
                             .padding(bottom = 16.dp)
                             .clickable(enabled = false) { }
                             .background(
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
                                 width = 1.dp,
-                                color = Color(0xFF555454).copy(alpha = 0.16f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(12.dp),
@@ -1083,12 +1083,12 @@ fun MainScreen(
                         Column(
                             modifier = Modifier
                                 .background(
-                                    color = Color(0xFF545559).copy(alpha = 0.10f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .border(
                                     width = 1.dp,
-                                    color = Color(0xFF555454).copy(alpha = 0.16f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .padding(16.dp),
@@ -1145,12 +1145,12 @@ fun MainScreen(
                             modifier = Modifier
                                 .padding(bottom = 16.dp)
                                 .background(
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .border(
                                     width = 1.dp,
-                                    color = Color(0xFF555454).copy(alpha = 0.16f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
                                     shape = RoundedCornerShape(4.dp)
                                 )
                                 .padding(16.dp),
@@ -1282,12 +1282,12 @@ fun MainScreen(
                             .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
                             .clickable(enabled = false) { }
                             .background(
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
                                 width = 1.dp,
-                                color = Color(0xFF555454).copy(alpha = 0.16f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(16.dp)
@@ -1315,12 +1315,12 @@ fun MainScreen(
                             .padding(bottom = 16.dp, start = 32.dp, end = 32.dp)
                             .clickable(enabled = false) { }
                             .background(
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.14f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .border(
                                 width = 1.dp,
-                                color = Color(0xFF555454).copy(alpha = 0.16f),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.16f),
                                 shape = RoundedCornerShape(4.dp)
                             )
                             .padding(16.dp)
