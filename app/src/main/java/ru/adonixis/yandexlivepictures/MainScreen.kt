@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,7 +27,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -58,7 +55,6 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -67,7 +63,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -76,7 +71,6 @@ import ru.adonixis.yandexlivepictures.components.dialog.DeleteAllFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.DuplicateFrameDialog
 import ru.adonixis.yandexlivepictures.components.dialog.GenerateFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.PlaybackSpeedDialog
-import ru.adonixis.yandexlivepictures.components.WidthSlider
 import ru.adonixis.yandexlivepictures.theme.Black
 import ru.adonixis.yandexlivepictures.theme.YandexLivePicturesTheme
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawArrow
@@ -85,10 +79,10 @@ import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawSmoothLine
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawSquare
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.drawTriangle
 import ru.adonixis.yandexlivepictures.utils.UiExtensions.getDistanceTo
-import kotlin.math.ceil
 import kotlin.math.min
 import ru.adonixis.yandexlivepictures.components.TopActionBar
 import ru.adonixis.yandexlivepictures.components.BottomToolBar
+import ru.adonixis.yandexlivepictures.components.panel.ColorPanel
 import ru.adonixis.yandexlivepictures.components.panel.WidthSliderPanel
 
 private object ScreenConstants {
@@ -879,210 +873,23 @@ fun MainScreen(
                     }
                 }
 
-                Column(
+                ColorPanel(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .clickable(enabled = false) { },
-                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    AnimatedVisibility(
-                        visible = state.isExtendedColorsVisible,
-                        enter = fadeIn(
-                            animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
-                        ),
-                        exit = fadeOut(
-                            animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .background(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
-                                    shape = RoundedCornerShape(4.dp)
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
-                                    shape = RoundedCornerShape(4.dp)
-                                )
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            val rows = ceil((Colors.extendedColors.size.toFloat() / 5.0f)).toInt()
-                            for (row in 0 until rows) {
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    for (col in 0..4) {
-                                        val color = Colors.extendedColors[row * 5 + col]
-                                        IconButton(
-                                            modifier = Modifier.size(32.dp),
-                                            onClick = {
-                                                viewModel.onAction(MainAction.SelectColor(color.toArgb()))
-                                            }
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(28.dp)
-                                                    .background(color = color, shape = CircleShape)
-                                                    .then(
-                                                        if (state.selectedColor == color.toArgb()) {
-                                                            Modifier.border(
-                                                                width = 1.5.dp,
-                                                                color = MaterialTheme.colorScheme.primary,
-                                                                shape = CircleShape
-                                                            )
-                                                        } else {
-                                                            Modifier
-                                                        }
-                                                    ),
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        .padding(bottom = 16.dp),
+                    isVisible = state.currentTool == Tool.COLORS,
+                    isExtendedColorsVisible = state.isExtendedColorsVisible,
+                    selectedColor = state.selectedColor,
+                    animationDurationMillis = ScreenConstants.ANIMATION_DURATION,
+                    alphaBackground = ScreenConstants.ALPHA_SEMI_TRANSPARENT,
+                    alphaBorder = ScreenConstants.ALPHA_BORDER,
+                    onColorSelected = { color ->
+                        viewModel.onAction(MainAction.SelectColor(color))
+                    },
+                    onToggleExtendedColors = {
+                        viewModel.onAction(MainAction.ToggleExtendedColorsPanel)
                     }
-
-                    AnimatedVisibility(
-                        visible = state.currentTool == Tool.COLORS,
-                        enter = fadeIn(
-                            animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
-                        ),
-                        exit = fadeOut(
-                            animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .padding(bottom = 16.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = ScreenConstants.ALPHA_SEMI_TRANSPARENT),
-                                    shape = RoundedCornerShape(4.dp)
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = ScreenConstants.ALPHA_BORDER),
-                                    shape = RoundedCornerShape(4.dp)
-                                )
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = { viewModel.onAction(MainAction.ToggleExtendedColorsPanel) }
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_color_palette_32),
-                                    contentDescription = "Color palette",
-                                    tint = if (state.isExtendedColorsVisible)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = {
-                                    viewModel.onAction(MainAction.SelectColor(Colors.White.toArgb()))
-                                }
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(color = Colors.White, shape = CircleShape)
-                                        .then(
-                                            if (state.selectedColor == Colors.White.toArgb()) {
-                                                Modifier.border(
-                                                    width = 1.5.dp,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    shape = CircleShape
-                                                )
-                                            } else {
-                                                Modifier
-                                            }
-                                        ),
-                                )
-                            }
-
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = {
-                                    viewModel.onAction(MainAction.SelectColor(Colors.Red.toArgb()))
-                                }
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(color = Colors.Red, shape = CircleShape)
-                                        .then(
-                                            if (state.selectedColor == Colors.Red.toArgb()) {
-                                                Modifier.border(
-                                                    width = 1.5.dp,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    shape = CircleShape
-                                                )
-                                            } else {
-                                                Modifier
-                                            }
-                                        ),
-                                )
-                            }
-
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = {
-                                    viewModel.onAction(MainAction.SelectColor(Colors.Black.toArgb()))
-                                }
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(color = Colors.Black, shape = CircleShape)
-                                        .then(
-                                            if (state.selectedColor == Colors.Black.toArgb()) {
-                                                Modifier.border(
-                                                    width = 1.5.dp,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    shape = CircleShape
-                                                )
-                                            } else {
-                                                Modifier
-                                            }
-                                        ),
-                                )
-                            }
-
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = {
-                                    viewModel.onAction(MainAction.SelectColor(Colors.Blue.toArgb()))
-                                }
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(color = Colors.Blue, shape = CircleShape)
-                                        .then(
-                                            if (state.selectedColor == Colors.Blue.toArgb()) {
-                                                Modifier.border(
-                                                    width = 1.5.dp,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    shape = CircleShape
-                                                )
-                                            } else {
-                                                Modifier
-                                            }
-                                        ),
-                                )
-                            }
-                        }
-                    }
-                }
+                )
 
                 WidthSliderPanel(
                     modifier = Modifier
