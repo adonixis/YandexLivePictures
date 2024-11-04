@@ -525,9 +525,7 @@ class MainViewModel : ViewModel() {
                                         }
                                         val scaledSize = action.size * action.scale
                                         
-                                        // Сохраняем текущую матрицу трансформации
                                         drawingCanvas.save()
-                                        // Поворачиваем канвас вокруг центра фигуры
                                         drawingCanvas.rotate(action.rotation, action.center.x, action.center.y)
                                         
                                         when (action.shape) {
@@ -571,7 +569,6 @@ class MainViewModel : ViewModel() {
                                             }
                                         }
                                         
-                                        // Восстанавливаем матрицу трансформации
                                         drawingCanvas.restore()
                                     }
                                 }
@@ -736,9 +733,7 @@ class MainViewModel : ViewModel() {
                     }
                     val scaledSize = action.size * action.scale
                     
-                    // Сохраняем текущую матрицу трансформации
                     canvas.save()
-                    // Поворачиваем канвас вокруг центра фигуры
                     canvas.rotate(action.rotation, action.center.x, action.center.y)
                     
                     when (action.shape) {
@@ -782,7 +777,6 @@ class MainViewModel : ViewModel() {
                         }
                     }
                     
-                    // Восстанавливаем матрицу трансформации
                     canvas.restore()
                 }
             }
