@@ -387,7 +387,6 @@ fun MainScreen(
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Верхняя панель с кнопками
         Row(
             modifier = Modifier
                 .padding(top = 14.dp)
@@ -396,7 +395,6 @@ fun MainScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Левая группа кнопок (Undo/Redo)
             Row(
                 modifier = Modifier.alpha(if (state.isPlaybackActive) 0f else 1f),
                 verticalAlignment = Alignment.CenterVertically,
@@ -436,7 +434,6 @@ fun MainScreen(
                 }
             }
 
-            // Центральная группа кнопок
             Row(
                 modifier = Modifier.alpha(if (state.isPlaybackActive) 0f else 1f),
                 verticalAlignment = Alignment.CenterVertically,
@@ -505,7 +502,6 @@ fun MainScreen(
                 }
             }
 
-            // Правая группа кнопок (Save, Play и Stop) - всегда видима
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -572,7 +568,6 @@ fun MainScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            // Canvas
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -776,7 +771,6 @@ fun MainScreen(
                         val checkPoint = saveLayer(null, null)
 
                         if (state.isPlaybackActive) {
-                            // Отрисовка текущего кадра анимации
                             val playbackFrame = state.frames[state.playbackFrameIndex]
                             playbackFrame.actionHistory.take(playbackFrame.currentHistoryPosition + 1)
                                 .forEach { action ->
@@ -816,7 +810,6 @@ fun MainScreen(
                                     }
                                 }
                         } else {
-                            // Слой для предыдущего кадра
                             if (state.currentFrameIndex > 0) {
                                 val previousCheckPoint = saveLayer(null, null)
 
@@ -862,10 +855,8 @@ fun MainScreen(
                                 restoreToCount(previousCheckPoint)
                             }
 
-                            // Отдельный слой для текущего кадра
                             val currentCheckPoint = saveLayer(null, null)
 
-                            // Рисуем текущий кадр
                             val currentFrame = state.frames[state.currentFrameIndex]
                             currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1)
                                 .forEach { action ->
@@ -905,7 +896,6 @@ fun MainScreen(
                                     }
                                 }
 
-                            // Отрисовка текущих путей
                             if (currentPath.size > 1) {
                                 drawPath(
                                     path = Path().apply { drawSmoothLine(currentPath) },
@@ -930,7 +920,6 @@ fun MainScreen(
                                     blendMode = BlendMode.Clear
                                 )
                                 
-                                // Добавляем индикатор размера ластика
                                 drawCircle(
                                     color = Black.copy(alpha = 0.5f),
                                     radius = state.eraserWidth / 2,
@@ -951,7 +940,6 @@ fun MainScreen(
             }
 
             if (!state.isPlaybackActive) {
-                // Панель с кадрами
                 this@Column.AnimatedVisibility(
                     visible = state.isFrameListVisible,
                     enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
@@ -1088,7 +1076,6 @@ fun MainScreen(
                     }
                 }
 
-                // Панель с фигурами
                 this@Column.AnimatedVisibility(
                     visible = state.currentTool == Tool.SHAPES,
                     enter = fadeIn(
@@ -1207,7 +1194,6 @@ fun MainScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Расширенная панель с цветами
                     AnimatedVisibility(
                         visible = state.isExtendedColorsVisible,
                         enter = fadeIn(
@@ -1268,7 +1254,6 @@ fun MainScreen(
                         }
                     }
 
-                    // Панель с цветами
                     AnimatedVisibility(
                         visible = state.currentTool == Tool.COLORS,
                         enter = fadeIn(
@@ -1407,7 +1392,6 @@ fun MainScreen(
                     }
                 }
 
-                // Панель со слайдером ластика
                 this@Column.AnimatedVisibility(
                     visible = state.isEraserWidthSliderVisible,
                     enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
@@ -1444,7 +1428,6 @@ fun MainScreen(
                     }
                 }
 
-                // Панель со слайдером кисти
                 this@Column.AnimatedVisibility(
                     visible = state.isBrushWidthSliderVisible,
                     enter = fadeIn(animationSpec = tween(durationMillis = ScreenConstants.ANIMATION_DURATION)),
@@ -1483,7 +1466,6 @@ fun MainScreen(
             }
         }
 
-        // Нижняя панель с инструментами
         Row(
             modifier = Modifier
                 .padding(bottom = 14.dp)
