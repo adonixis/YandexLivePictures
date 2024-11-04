@@ -92,6 +92,8 @@ private object ScreenConstants {
     const val SLIDER_MIN = 2f
     const val SLIDER_MAX = 100f
     const val THUMBNAIL_HEIGHT = 100f
+    const val FRAME_COUNT_DEFAULT = 10
+    const val PLAYBACK_SPEED_DEFAULT = 5
 }
 
 private fun Path.drawSmoothLine(points: List<Offset>) {
@@ -260,8 +262,8 @@ fun MainScreen(
     val currentPath = remember { mutableStateListOf<Offset>() }
     val currentEraserPath = remember { mutableStateListOf<Offset>() }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
-    var frameCount by remember { mutableStateOf("10") }
-    var playbackSpeed by remember { mutableStateOf("5") }
+    var frameCount by remember { mutableStateOf("${ScreenConstants.FRAME_COUNT_DEFAULT}") }
+    var playbackSpeed by remember { mutableStateOf("${ScreenConstants.PLAYBACK_SPEED_DEFAULT}") }
     val context = LocalContext.current
     val density = LocalDensity.current
 
