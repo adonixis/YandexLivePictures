@@ -87,6 +87,8 @@ import ru.adonixis.yandexlivepictures.components.dialog.DuplicateFrameDialog
 import ru.adonixis.yandexlivepictures.components.dialog.GenerateFramesDialog
 import ru.adonixis.yandexlivepictures.components.dialog.PlaybackSpeedDialog
 import ru.adonixis.yandexlivepictures.components.panel.ProgressIndicator
+import ru.adonixis.yandexlivepictures.theme.GreenDark
+import ru.adonixis.yandexlivepictures.theme.GreenLight
 
 private object ScreenConstants {
     const val ANIMATION_DURATION = 200
@@ -206,8 +208,8 @@ private fun SliderTrack(
 ) {
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(
-            Color(0xFF9CCB0C),
-            Color(0xFFEAFFAB)
+            GreenDark,
+            GreenLight
         )
     )
     
