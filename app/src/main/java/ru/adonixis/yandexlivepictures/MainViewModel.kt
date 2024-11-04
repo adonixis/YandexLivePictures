@@ -91,7 +91,7 @@ class MainViewModel : ViewModel() {
                     val currentFrame = currentState.frames[currentState.currentFrameIndex]
                     val newHistory = currentFrame.actionHistory.take(currentFrame.currentHistoryPosition + 1).toMutableList()
                     
-                    val width = if (currentState.currentTool == Tool.BRUSH) currentState.brushWidth else 2f
+                    val width = if (currentState.currentTool == Tool.BRUSH) currentState.brushWidth else currentState.pencilWidth
                     
                     newHistory.add(DrawAction.DrawPath(
                         path = action.path,
@@ -326,7 +326,7 @@ class MainViewModel : ViewModel() {
                 ) }
                 startPlayback()
             }
-            is MainAction.SaveAsGif -> saveAsGif(action.context, action.density)
+            is MainAction.SaveAsGif -> saveAsGif(action.context)
             is MainAction.SelectFrame -> {
                 _state.update { it.copy(
                     currentFrameIndex = action.index
@@ -357,7 +357,7 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private fun saveAsGif(context: Context, density: Density) {
+    private fun saveAsGif(context: Context) {
         viewModelScope.launch(Dispatchers.Default) {
             try {
                 _state.update { it.copy(isSavingGif = true, gifSavingResult = null) }
@@ -406,7 +406,7 @@ class MainViewModel : ViewModel() {
                                     is DrawAction.DrawPath -> {
                                         val paint = Paint().apply {
                                             color = action.color
-                                            strokeWidth = with(density) { action.width.dp.toPx() }
+                                            strokeWidth = action.width
                                             style = Paint.Style.STROKE
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
@@ -415,7 +415,7 @@ class MainViewModel : ViewModel() {
                                     }
                                     is DrawAction.ErasePath -> {
                                         val paint = Paint().apply {
-                                            strokeWidth = with(density) { action.width.dp.toPx() }
+                                            strokeWidth = action.width
                                             style = Paint.Style.STROKE
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
@@ -427,7 +427,7 @@ class MainViewModel : ViewModel() {
                                     is DrawAction.DrawShape -> {
                                         val paint = Paint().apply {
                                             color = action.color
-                                            strokeWidth = with(density) { 2.dp.toPx() }
+                                            strokeWidth = state.value.pencilWidth
                                             style = Paint.Style.STROKE
                                             strokeCap = Paint.Cap.ROUND
                                             strokeJoin = Paint.Join.ROUND
@@ -569,6 +569,14 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun initializeWidths(pencilWidth: Float, brushWidth: Float, eraserWidth: Float) {
+        _state.update { it.copy(
+            pencilWidth = pencilWidth,
+            brushWidth = brushWidth,
+            eraserWidth = eraserWidth
+        ) }
+    }
+
     override fun onCleared() {
         super.onCleared()
         viewModelScope.coroutineContext.cancelChildren()
@@ -585,9 +593,7 @@ data class MainState(
     val playbackFrameIndex: Int = 0,
     val selectedColor: Int = Colors.Black.toArgb(),
     val isEraserWidthSliderVisible: Boolean = false,
-    val eraserWidth: Float = 20f,
     val isBrushWidthSliderVisible: Boolean = false,
-    val brushWidth: Float = 20f,
     val isGenerateFramesDialogVisible: Boolean = false,
     val canvasSize: Size = Size.Zero,
     val isDeleteAllDialogVisible: Boolean = false,
@@ -596,7 +602,10 @@ data class MainState(
     val playbackFps: Int = 5,
     val isSavingGif: Boolean = false,
     val gifSavingResult: GifSavingResult? = null,
-    val isFrameListVisible: Boolean = false
+    val isFrameListVisible: Boolean = false,
+    val pencilWidth: Float = 0f,
+    val eraserWidth: Float = 0f,
+    val brushWidth: Float = 0f
 )
 
 data class Frame(
@@ -634,7 +643,7 @@ sealed interface MainAction {
     data object ShowPlaybackSpeedDialog : MainAction
     data object HidePlaybackSpeedDialog : MainAction
     data class UpdatePlaybackSpeed(val fps: Int) : MainAction
-    data class SaveAsGif(val context: Context, val density: Density) : MainAction
+    data class SaveAsGif(val context: Context) : MainAction
     data class SelectFrame(val index: Int) : MainAction
     data object ShowFrameList : MainAction
     data object HideFrameList : MainAction

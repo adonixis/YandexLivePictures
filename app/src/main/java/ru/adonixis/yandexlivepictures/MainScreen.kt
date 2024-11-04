@@ -241,6 +241,16 @@ fun MainScreen(
     val context = LocalContext.current
     val density = LocalDensity.current
 
+    LaunchedEffect(Unit) {
+        with(density) {
+            viewModel.initializeWidths(
+                pencilWidth = 2.dp.toPx(),
+                brushWidth = 20.dp.toPx(),
+                eraserWidth = 20.dp.toPx()
+            )
+        }
+    }
+
     LaunchedEffect(state.gifSavingResult) {
         state.gifSavingResult?.let { result ->
             when (result) {
@@ -479,7 +489,7 @@ fun MainScreen(
                         modifier = Modifier.size(36.dp),
                         onClick = {
                             viewModel.onAction(MainAction.StopPlayback)
-                            viewModel.onAction(MainAction.SaveAsGif(context, density))
+                            viewModel.onAction(MainAction.SaveAsGif(context))
                         }
                     ) {
                         Icon(
@@ -668,7 +678,7 @@ fun MainScreen(
                                                 path = Path().apply { drawSmoothLine(action.path) },
                                                 color = Color(action.color),
                                                 style = Stroke(
-                                                    width = action.width.dp.toPx(),
+                                                    width = action.width,
                                                     cap = StrokeCap.Round,
                                                     join = StrokeJoin.Round
                                                 )
@@ -680,7 +690,7 @@ fun MainScreen(
                                                 path = Path().apply { drawSmoothLine(action.path) },
                                                 color = Color.Transparent,
                                                 style = Stroke(
-                                                    width = action.width.dp.toPx(),
+                                                    width = action.width,
                                                     cap = StrokeCap.Round,
                                                     join = StrokeJoin.Round
                                                 ),
@@ -711,7 +721,7 @@ fun MainScreen(
                                                     path = Path().apply { drawSmoothLine(action.path) },
                                                     color = Color(action.color).copy(alpha = 0.3f),
                                                     style = Stroke(
-                                                        width = action.width.dp.toPx(),
+                                                        width = action.width,
                                                         cap = StrokeCap.Round,
                                                         join = StrokeJoin.Round
                                                     )
@@ -723,7 +733,7 @@ fun MainScreen(
                                                     path = Path().apply { drawSmoothLine(action.path) },
                                                     color = Color.Transparent,
                                                     style = Stroke(
-                                                        width = action.width.dp.toPx(),
+                                                        width = action.width,
                                                         cap = StrokeCap.Round,
                                                         join = StrokeJoin.Round
                                                     ),
@@ -757,7 +767,7 @@ fun MainScreen(
                                                 path = Path().apply { drawSmoothLine(action.path) },
                                                 color = Color(action.color),
                                                 style = Stroke(
-                                                    width = action.width.dp.toPx(),
+                                                    width = action.width,
                                                     cap = StrokeCap.Round,
                                                     join = StrokeJoin.Round
                                                 )
@@ -769,7 +779,7 @@ fun MainScreen(
                                                 path = Path().apply { drawSmoothLine(action.path) },
                                                 color = Color.Transparent,
                                                 style = Stroke(
-                                                    width = action.width.dp.toPx(),
+                                                    width = action.width,
                                                     cap = StrokeCap.Round,
                                                     join = StrokeJoin.Round
                                                 ),
@@ -793,7 +803,7 @@ fun MainScreen(
                                     path = Path().apply { drawSmoothLine(currentPath) },
                                     color = Color(state.selectedColor),
                                     style = Stroke(
-                                        width = (if (state.currentTool == Tool.BRUSH) state.brushWidth else 2f).dp.toPx(),
+                                        width = if (state.currentTool == Tool.BRUSH) state.brushWidth else state.pencilWidth,
                                         cap = StrokeCap.Round,
                                         join = StrokeJoin.Round
                                     )
@@ -805,7 +815,7 @@ fun MainScreen(
                                     path = Path().apply { drawSmoothLine(currentEraserPath) },
                                     color = Color.Transparent,
                                     style = Stroke(
-                                        width = state.eraserWidth.dp.toPx(),
+                                        width = state.eraserWidth,
                                         cap = StrokeCap.Round,
                                         join = StrokeJoin.Round
                                     ),
@@ -815,7 +825,7 @@ fun MainScreen(
                                 // Добавляем индикатор размера ластика
                                 drawCircle(
                                     color = Black.copy(alpha = 0.5f),
-                                    radius = state.eraserWidth.dp.toPx() / 2,
+                                    radius = state.eraserWidth / 2,
                                     center = currentEraserPath.last(),
                                     style = Stroke(
                                         width = 1.dp.toPx(),
@@ -1294,8 +1304,12 @@ fun MainScreen(
                     ) {
                         Slider(
                             modifier = Modifier.height(20.dp),
-                            value = state.eraserWidth,
-                            onValueChange = { viewModel.onAction(MainAction.UpdateEraserWidth(it)) },
+                            value = with(density) { state.eraserWidth.toDp().value },
+                            onValueChange = { dpValue ->
+                                with(density) {
+                                    viewModel.onAction(MainAction.UpdateEraserWidth(dpValue.dp.toPx()))
+                                }
+                            },
                             valueRange = 2f..100f,
                             thumb = { SliderThumb() },
                             track = { SliderTrack() }
@@ -1327,8 +1341,12 @@ fun MainScreen(
                     ) {
                         Slider(
                             modifier = Modifier.height(20.dp),
-                            value = state.brushWidth,
-                            onValueChange = { viewModel.onAction(MainAction.UpdateBrushWidth(it)) },
+                            value = with(density) { state.brushWidth.toDp().value },
+                            onValueChange = { dpValue ->
+                                with(density) {
+                                    viewModel.onAction(MainAction.UpdateBrushWidth(dpValue.dp.toPx()))
+                                }
+                            },
                             valueRange = 2f..100f,
                             thumb = { SliderThumb() },
                             track = { SliderTrack() }
